@@ -473,8 +473,12 @@ function init() {
 
   $('inputs').addEventListener('input', update);
   $('inputs').addEventListener('change', update);
+  // Re-render on theme change — the SVG charts bake series colors in as hex
   window.matchMedia('(prefers-color-scheme: dark)')
     .addEventListener('change', update);
+  new MutationObserver(update).observe(document.documentElement, {
+    attributes: true, attributeFilter: ['data-theme'],
+  });
 
   update();
 }
