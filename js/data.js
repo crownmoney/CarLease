@@ -225,6 +225,8 @@ export const AU_DATA = {
     { label: 'ATO — Luxury car tax rate and thresholds', url: 'https://www.ato.gov.au/tax-rates-and-codes/luxury-car-tax-rate-and-thresholds' },
     { label: 'ATO — Car thresholds from 1 July (car limit & GST credit)', url: 'https://www.ato.gov.au/businesses-and-organisations/small-business-newsroom/car-thresholds-from-1-july' },
     { label: 'ATO — GST and vehicles purchased under novated leases', url: 'https://www.ato.gov.au/businesses-and-organisations/gst-excise-and-indirect-taxes/gst/in-detail/your-industry/motor-vehicle-and-transport/gst-and-vehicles-purchased-under-novated-leases' },
+    { label: 'ATO — FBT guide for employers (employee contributions: GST of 1/11 on contributions paid to the employer)', url: 'https://www.ato.gov.au/law/view/document?DocID=SAV%2FFBTGEMP%2F00002' },
+    { label: 'GSTR 2001/3 — GST and supplies of fringe benefits', url: 'https://www.ato.gov.au/law/view/document?docid=GST/GSTR20013/NAT/ATO/00001' },
     { label: 'ATO ID 2002/1004 — minimum lease residual values', url: 'https://www.ato.gov.au/law/view/document?docid=aid/aid20021004/00001' },
     { label: 'RBA — cash rate target (4.35%, June 2026)', url: 'https://www.rba.gov.au/statistics/cash-rate/' },
     { label: 'Revenue NSW — motor vehicle duty', url: 'https://www.revenue.nsw.gov.au/taxes-duties-levies-royalties/motor-vehicle-duty' },
