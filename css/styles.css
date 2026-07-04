@@ -291,13 +291,6 @@ body {
 
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-.input-prefix { position: relative; }
-.input-prefix > span {
-  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
-  color: var(--text-muted); font-size: 14px; pointer-events: none;
-}
-.input-prefix > input { padding-left: 24px; }
-
 .seg {
   display: flex;
   border: 1px solid var(--baseline);

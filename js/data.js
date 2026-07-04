@@ -106,7 +106,10 @@ export const AU_DATA = {
       hybrid: { energyPrice: 1.80, consumption: 4.5, servicePerYear: 600 },
       ev: { energyPrice: 0.30, consumption: 17, servicePerYear: 400 },
     },
-    insurancePerYear: 1800,
+    // National averages cluster $1,100-1,600/yr for a typical adult driver
+    // (Compare the Market ~$1,100-1,300; Finder ~$1,560; Canstar's quoted
+    // $2,460 is the high outlier). Editable in the UI.
+    insurancePerYear: 1400,
     tyresPerYear: 350,
     kmPerYear: 13000,
   },

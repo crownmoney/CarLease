@@ -199,6 +199,22 @@ test('GST credit on the car is capped at the car-limit credit', () => {
   assert.ok(Math.abs(novatedLease({ ...baseInputs, price: 120000 }).gstCredit - AU_DATA.gst.maxCarCredit) < 1);
 });
 
+test('user overrides for rego and fees flow through', () => {
+  const off = { ...baseInputs, includeOpportunityCost: false };
+  // Rego override changes running costs by exactly the delta × term
+  const cheapRego = buyOutright({ ...off, regoCtpPerYear: 580 });
+  const defaultRego = buyOutright(off); // falls back to NSW figure (1080)
+  assert.ok(Math.abs((defaultRego.netCost - cheapRego.netCost) - 500 * 5) < 1);
+  // Loan fee overrides
+  const noFees = carLoan({ ...off, loanAppFee: 0, loanMonthlyFee: 0 });
+  assert.ok(noFees.netCost < carLoan(off).netCost);
+  assert.equal(noFees.rows.find((r) => r.label === 'Loan fees').amount, 0);
+  // Lease fee overrides
+  const cheapLease = novatedLease({ ...off, leaseEstFee: 0, leaseAdminMonthly: 0 });
+  assert.ok(cheapLease.netCost < novatedLease(off).netCost);
+  assert.equal(cheapLease.rows.find((r) => r.label === 'Admin fees').amount, 0);
+});
+
 test('resale override is respected everywhere', () => {
   const cmp = compareAll({ ...baseInputs, resaleOverride: 20000 });
   for (const r of cmp.results) assert.equal(r.resale, 20000);

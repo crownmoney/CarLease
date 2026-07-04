@@ -129,7 +129,7 @@ export function annualRunningCosts(inputs, data = AU_DATA) {
   }
   const serviceTyres = inputs.servicePerYear + inputs.tyresPerYear;
   const gstable = energy + inputs.insurancePerYear + serviceTyres;
-  const gstFree = s.regoCtpPerYear;
+  const gstFree = inputs.regoCtpPerYear ?? s.regoCtpPerYear;
   return {
     energy,
     insurance: inputs.insurancePerYear,
@@ -257,14 +257,16 @@ export function carLoan(inputs, data = AU_DATA) {
   const rate = inputs.includeOpportunityCost ? inputs.investRate : 0;
 
   const deposit = inputs.loanDeposit || 0;
-  const financed = inputs.price + duty - deposit + data.loan.applicationFee;
+  const appFee = inputs.loanAppFee ?? data.loan.applicationFee;
+  const monthlyFee = inputs.loanMonthlyFee ?? data.loan.monthlyFee;
+  const financed = inputs.price + duty - deposit + appFee;
   const balloon = inputs.price * (inputs.loanBalloonPct || 0);
   const payment = monthlyRepayment(financed, inputs.loanRate, months, balloon);
   const interest = payment * months + balloon - financed;
-  const monthlyFees = data.loan.monthlyFee * months;
+  const monthlyFees = monthlyFee * months;
 
   const s = settle(
-    { upfront: deposit, monthly: payment + data.loan.monthlyFee + run.total / 12, terminal: balloon },
+    { upfront: deposit, monthly: payment + monthlyFee + run.total / 12, terminal: balloon },
     t, rate, resale,
   );
 
@@ -276,14 +278,14 @@ export function carLoan(inputs, data = AU_DATA) {
       note: `${(inputs.loanRate * 100).toFixed(2)}% p.a. over ${t} yrs` +
         (balloon ? `, ${Math.round(balloon)} balloon` : ''),
     },
-    { group: G.fin, label: 'Loan fees', amount: data.loan.applicationFee + monthlyFees },
+    { group: G.fin, label: 'Loan fees', amount: appFee + monthlyFees },
     ...runningRows(run, t, false),
     ...opportunityRow(s.opportunity, inputs),
     { group: G.end, label: 'Less: resale value', amount: -resale },
   ];
 
   return finishResult('Car loan', deposit, s, resale, rows, t, {
-    monthlyOutgoing: payment + data.loan.monthlyFee + run.total / 12,
+    monthlyOutgoing: payment + monthlyFee + run.total / 12,
     monthlyRepayment: payment,
     interest,
     balloon,
@@ -302,7 +304,7 @@ export function novatedLease(inputs, data = AU_DATA) {
   // GST on the car is claimed by the financier (capped at 1/11 of the car limit),
   // so the amount financed is the GST-exclusive price (up to the cap) + on-roads.
   const gstCredit = Math.min(inputs.price / 11, data.gst.maxCarCredit);
-  const financed = inputs.price - gstCredit + duty + data.lease.establishmentFee;
+  const financed = inputs.price - gstCredit + duty + (inputs.leaseEstFee ?? data.lease.establishmentFee);
 
   const residual = financed * residualPct(t, data);
   const financePayment = monthlyRepayment(financed, inputs.leaseRate, months, residual);
@@ -311,7 +313,7 @@ export function novatedLease(inputs, data = AU_DATA) {
   // Packaged running costs are effectively GST-exclusive to the employee
   // (employer claims input tax credits on the GST-able portion).
   const runMonthlyExGst = (run.gstable / 1.1 + run.gstFree) / 12;
-  const adminMonthly = data.lease.adminFeePerMonth;
+  const adminMonthly = inputs.leaseAdminMonthly ?? data.lease.adminFeePerMonth;
   const packageMonthly = financePayment + runMonthlyExGst + adminMonthly;
   const packageAnnual = packageMonthly * 12;
 

@@ -36,6 +36,12 @@ function populateStates() {
     sel.appendChild(opt);
   }
   sel.value = 'NSW';
+  // Rego & CTP is state-specific: seed it now and re-seed whenever the state
+  // changes (registered before the form-level listener, so the recalculation
+  // that follows sees the fresh value). Users can still edit it afterwards.
+  const seedRego = () => { $('rego').value = AU_DATA.states[sel.value].regoCtpPerYear; };
+  seedRego();
+  sel.addEventListener('change', seedRego);
 }
 
 function applyVehicleTypeDefaults() {
@@ -77,9 +83,14 @@ function readInputs() {
     leaseRate: num('leaseRate', 9.5) / 100,
     loanDeposit: num('loanDeposit', 0),
     loanBalloonPct: num('loanBalloon', 0) / 100,
-    insurancePerYear: num('insurance', 1800),
+    insurancePerYear: num('insurance', 1400),
     servicePerYear: num('service', 600),
     tyresPerYear: num('tyres', 350),
+    regoCtpPerYear: num('rego', 1080),
+    loanAppFee: num('loanAppFee', 250),
+    loanMonthlyFee: num('loanMonthlyFee', 15),
+    leaseEstFee: num('leaseEstFee', 475),
+    leaseAdminMonthly: num('leaseAdminFee', 30),
     fuelPerLitre: vehicleType === 'ev' ? 0 : num('fuelPrice', 1.8),
     fuelLPer100km: vehicleType === 'ev' ? 0 : num('consumption', 7.5),
     electricityPerKwh: vehicleType === 'ev' ? num('fuelPrice', 0.3) : 0,
@@ -427,7 +438,7 @@ function renderNotes(cmp, inputs) {
         ${inputs.state} stamp duty). You own the car from day one.</li>
       <li><strong>Car loan</strong> — secured new-car loan at ${(inputs.loanRate * 100).toFixed(2)}% p.a.
         (comparison-rate territory for a good-credit borrower in mid-2026), on-road costs financed,
-        ${money(d.loan.applicationFee)} application fee and ${money(d.loan.monthlyFee)}/month account fee.</li>
+        ${money(inputs.loanAppFee)} application fee and ${money(inputs.loanMonthlyFee)}/month account fee.</li>
       <li><strong>Novated lease</strong> — fully-maintained lease salary-packaged through your employer at an
         effective ${(inputs.leaseRate * 100).toFixed(2)}% p.a. The financier claims the GST on the car
         (capped at ${money(d.gst.maxCarCredit)}), running costs are packaged ex-GST, and pre-tax deductions
@@ -445,12 +456,13 @@ function renderNotes(cmp, inputs) {
         tax offset. HELP debts, the Medicare levy surcharge and super are not modelled.</li>
       <li>FBT year ending 31 March 2027: 47% FBT rate, 20% statutory formula, base value = GST-inclusive
         price excluding stamp duty and rego.</li>
-      <li>${inputs.state} stamp duty: ${s.dutyNote}. Registration + CTP ≈ ${money(s.regoCtpPerYear)}/yr.</li>
+      <li>${inputs.state} stamp duty: ${s.dutyNote}. Registration + CTP ${money(inputs.regoCtpPerYear)}/yr
+        (typical for ${inputs.state} — editable under Advanced, like every other cost here).</li>
       <li>Depreciation: the car retains about
         ${(d.depreciation.retainedByYear[inputs.termYears] * 100).toFixed(0)}% of its price after
         ${inputs.termYears} year${inputs.termYears > 1 ? 's' : ''} (industry average — set your own resale
         value under Advanced if you know your model holds value differently).</li>
-      <li>Novated admin fee ${money(d.lease.adminFeePerMonth)}/month and ${money(d.lease.establishmentFee)}
+      <li>Novated admin fee ${money(inputs.leaseAdminMonthly)}/month and ${money(inputs.leaseEstFee)}
         establishment (typical of major providers; quotes vary widely — always compare a real quote).</li>
       <li>Interest paid, fees, and FBT are personal costs — none of the three methods is tax-deductible for
         a purely private-use car outside salary packaging.</li>
