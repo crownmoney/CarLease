@@ -30,12 +30,96 @@ const stat = (label, value, hero = false) =>
 
 const TAB_IDS = ['compare', 'loan', 'novated', 'duty', 'fuel', 'depreciation', 'economy', 'emissions', 'breakeven'];
 
+/* Hero copy follows the selected calculator. The compare entry mirrors the
+   static HTML (which is what crawlers index). */
+const HERO_COPY = {
+  compare: {
+    title: 'Novated lease, car loan, or cash — which really costs less?',
+    sub: `The honest three-way comparison for Australia — same car, same years, income tax, FBT,
+      GST and your state's stamp duty done properly, with what your money would have earned
+      <em>invested</em> counted for every method. Plus eight more calculators: loan repayments,
+      stamp duty & rego, fuel, depreciation, emissions and EV break-even — one page for
+      every car number.`,
+    doc: 'Car Calculator — novated lease vs car loan vs cash | Crown Money',
+  },
+  loan: {
+    title: 'What will a car loan really cost?',
+    sub: `Repayments weekly, fortnightly or monthly — plus the total interest, the fees, and how
+      the balance falls year by year. Balloon payments handled properly.`,
+    doc: 'Car loan repayment calculator | Car Calculator by Crown Money',
+  },
+  novated: {
+    title: 'What would a novated lease do to your pay?',
+    sub: `Your salary deduction, the tax you'd save, the pre-tax / post-tax split and the residual
+      at the end — with the EV exemption applied automatically when it should be.`,
+    doc: 'Novated lease calculator | Car Calculator by Crown Money',
+  },
+  duty: {
+    title: 'Stamp duty &amp; rego — every state, one look',
+    sub: `Your state's duty on the exact car, first-year rego + CTP, a drive-away estimate — and
+      the same car priced across all eight states and territories side by side.`,
+    doc: 'Car stamp duty & rego calculator (all states) | Car Calculator',
+  },
+  fuel: {
+    title: 'What does every kilometre cost you?',
+    sub: `Fuel or charging costs per week, month and year from your real driving — and what the
+      same distance would cost in an EV.`,
+    doc: 'Fuel & charging cost calculator | Car Calculator by Crown Money',
+  },
+  depreciation: {
+    title: 'What will your car be worth later?',
+    sub: `A year-by-year value estimate for up to ten years — industry-average curve or your own
+      rate — because depreciation is usually a car's single biggest cost.`,
+    doc: 'Car depreciation calculator | Car Calculator by Crown Money',
+  },
+  economy: {
+    title: 'How thirsty is your car, really?',
+    sub: `Turn one fill-up into your true consumption: L/100 km, km per litre, MPG conversions
+      and what it means per 100 km in dollars.`,
+    doc: 'Fuel economy calculator (L/100km, MPG) | Car Calculator',
+  },
+  emissions: {
+    title: 'How much CO₂ does your driving make?',
+    sub: `Tonnes per year for petrol, diesel, hybrid or grid-charged EV — with the tree-equivalent
+      to make it real, and how you compare to a typical car.`,
+    doc: 'Car CO₂ emissions calculator | Car Calculator by Crown Money',
+  },
+  breakeven: {
+    title: 'When does an EV pay for itself?',
+    sub: `The extra purchase price against the fuel and servicing you'd stop paying — how many
+      years until the electric car comes out ahead.`,
+    doc: 'EV vs petrol break-even calculator | Car Calculator by Crown Money',
+  },
+};
+
+function setHero(name) {
+  const copy = HERO_COPY[name];
+  if (!copy) return;
+  const title = $('heroTitle');
+  const sub = $('heroSub');
+  if (!title || !sub) return;
+  if (title.dataset.tab === name) return;
+  title.dataset.tab = name;
+  const swap = () => { title.innerHTML = copy.title; sub.innerHTML = copy.sub; };
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    swap();
+  } else {
+    [title, sub].forEach((el) => { el.classList.remove('hero-swap'); });
+    // force reflow so the animation can restart
+    void title.offsetWidth;
+    swap();
+    [title, sub].forEach((el) => el.classList.add('hero-swap'));
+  }
+  document.title = copy.doc;
+}
+
 function activateTab(name, updateHash = true) {
   if (!TAB_IDS.includes(name)) return;
   document.querySelectorAll('.tabs [role="tab"]').forEach((b) => {
     b.setAttribute('aria-selected', String(b.dataset.tab === name));
   });
   TAB_IDS.forEach((t) => { $(`tab-${t}`).hidden = t !== name; });
+  setHero(name);
   if (updateHash) history.replaceState(null, '', name === 'compare' ? '#calculator' : `#${name}`);
   if (window.gtag) window.gtag('event', 'calculator_tab', { tab: name });
 }
