@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Car Cost Compare — buy, loan or novated lease (Australia)</title>
+  <meta name="description" content="Compare the true cost of owning a car in Australia: buying outright, a secured car loan, or a novated lease — with FY 2026-27 tax, FBT, GST and state stamp duty built in." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚗</text></svg>" />
+</head>
+<body>
+<div class="wrap">
+  <header class="site">
+    <h1>Car Cost Compare</h1>
+    <span class="fy-badge" id="fyBadge">Australia · FY 2026–27</span>
+  </header>
+  <p class="tagline">
+    See whether it's cheaper to <strong>buy outright</strong>, take a <strong>car loan</strong>, or
+    salary-package a <strong>novated lease</strong> — a like-for-like comparison where you end up
+    owning the same car at the end, with income tax, FBT, GST and your state's stamp duty built in.
+  </p>
+
+  <div class="layout">
+    <!-- ============================================================ inputs -->
+    <form class="panel" id="inputs" autocomplete="off">
+      <h2>Your details</h2>
+
+      <div class="field">
+        <label for="price">Vehicle price <span class="hint">(incl. GST, before on-road costs)</span></label>
+        <div class="input-prefix"><span>$</span>
+          <input type="number" id="price" min="5000" max="500000" step="500" value="50000" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="vtLabel">Vehicle type</label>
+        <div class="seg" role="group" aria-labelledby="vtLabel" id="vehicleType">
+          <button type="button" data-value="petrol" aria-pressed="true">Petrol</button>
+          <button type="button" data-value="hybrid" aria-pressed="false">Hybrid</button>
+          <button type="button" data-value="ev" aria-pressed="false">EV</button>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="state">State / territory</label>
+          <select id="state"></select>
+        </div>
+        <div class="field">
+          <label for="term">Ownership period</label>
+          <select id="term">
+            <option value="1">1 year</option>
+            <option value="2">2 years</option>
+            <option value="3">3 years</option>
+            <option value="4">4 years</option>
+            <option value="5" selected>5 years</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="salary">Your gross annual salary <span class="hint">(before tax, excl. super)</span></label>
+        <div class="input-prefix"><span>$</span>
+          <input type="number" id="salary" min="0" max="1000000" step="1000" value="100000" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="km">Distance driven per year</label>
+        <div class="input-prefix"><span>km</span>
+          <input type="number" id="km" min="1000" max="60000" step="500" value="13000" style="padding-left:38px" />
+        </div>
+      </div>
+
+      <div class="field check-field">
+        <label class="check">
+          <input type="checkbox" id="oppCost" checked />
+          <span>Count forgone interest on cash used to buy outright
+            <span class="hint">(what that money could have earned in savings / an offset account)</span></span>
+        </label>
+      </div>
+
+      <details class="advanced">
+        <summary>Advanced assumptions</summary>
+        <div class="fields">
+          <p class="subhead">Finance</p>
+          <div class="field-row">
+            <div class="field">
+              <label for="loanRate">Loan rate <span class="hint">% p.a.</span></label>
+              <input type="number" id="loanRate" min="0" max="25" step="0.05" value="7.5" />
+            </div>
+            <div class="field">
+              <label for="leaseRate">Lease rate <span class="hint">% p.a.</span></label>
+              <input type="number" id="leaseRate" min="0" max="25" step="0.05" value="9.5" />
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="loanDeposit">Loan deposit <span class="hint">$</span></label>
+              <input type="number" id="loanDeposit" min="0" step="500" value="0" />
+            </div>
+            <div class="field">
+              <label for="loanBalloon">Loan balloon <span class="hint">% of price</span></label>
+              <input type="number" id="loanBalloon" min="0" max="50" step="5" value="0" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="savingsRate">Savings / offset return <span class="hint">% p.a. (for forgone interest)</span></label>
+            <input type="number" id="savingsRate" min="0" max="15" step="0.1" value="4.5" />
+          </div>
+
+          <p class="subhead">Running costs (per year)</p>
+          <div class="field-row">
+            <div class="field">
+              <label for="insurance">Insurance <span class="hint">$</span></label>
+              <input type="number" id="insurance" min="0" step="50" value="1800" />
+            </div>
+            <div class="field">
+              <label for="service">Servicing <span class="hint">$</span></label>
+              <input type="number" id="service" min="0" step="50" value="600" />
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="tyres">Tyres <span class="hint">$</span></label>
+              <input type="number" id="tyres" min="0" step="50" value="350" />
+            </div>
+            <div class="field">
+              <label for="fuelPrice" id="energyPriceLabel">Fuel price <span class="hint">$/L</span></label>
+              <input type="number" id="fuelPrice" min="0" step="0.01" value="1.80" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="consumption" id="consumptionLabel">Fuel consumption <span class="hint">L/100 km</span></label>
+            <input type="number" id="consumption" min="0" step="0.1" value="7.5" />
+          </div>
+
+          <p class="subhead">Resale</p>
+          <div class="field">
+            <label for="resale">Resale value after term <span class="hint">$ (leave blank to auto-estimate)</span></label>
+            <div class="input-prefix"><span>$</span>
+              <input type="number" id="resale" min="0" step="500" placeholder="auto" />
+            </div>
+          </div>
+        </div>
+      </details>
+    </form>
+
+    <!-- =========================================================== results -->
+    <main>
+      <section class="verdict" id="verdict" aria-live="polite"></section>
+
+      <section class="cards" id="cards"></section>
+
+      <div class="panel" style="margin-bottom:20px">
+        <figure class="chart" id="barChartFig">
+          <figcaption>Net cost of ownership</figcaption>
+          <div class="figsub" id="barChartSub"></div>
+          <div id="barChart"></div>
+        </figure>
+
+        <figure class="chart" id="lineChartFig" style="margin-bottom:0">
+          <figcaption>Cumulative cost over the term</figcaption>
+          <div class="figsub">Money out the door each year, with the residual/balloon paid and the car sold at the end of the final year.</div>
+          <div class="legend" id="lineLegend"></div>
+          <div id="lineChart"></div>
+        </figure>
+      </div>
+
+      <div class="panel" style="margin-bottom:20px">
+        <h2>Full cost breakdown</h2>
+        <div class="table-scroll">
+          <table class="breakdown" id="breakdown"></table>
+        </div>
+      </div>
+
+      <div class="panel notes">
+        <h2>How this works &amp; what's assumed</h2>
+        <div id="notes"></div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="site">
+    <p><strong>General information only — not financial, tax or credit advice.</strong>
+      Figures use published rates and market averages current at July 2026 (FY 2026-27; FBT year ending 31 March 2027)
+      and reasonable estimates where quotes vary. Novated lease quotes differ between providers — always compare a real
+      quote, and consider your own circumstances or a licensed adviser before deciding.</p>
+  </footer>
+</div>
+
+<div class="viz-tooltip" id="tooltip" role="status"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

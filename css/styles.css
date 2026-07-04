@@ -1,0 +1,354 @@
+/* Car Cost Compare — Australia
+   Role-based tokens; light/dark from the validated reference palette. */
+
+:root {
+  --page: #f9f9f7;
+  --surface-1: #fcfcfb;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --grid: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+  --good-text: #006300;
+
+  /* Method series colors — categorical slots 1-3, fixed order */
+  --series-outright: #2a78d6; /* blue */
+  --series-loan: #1baf7a;     /* aqua */
+  --series-lease: #eda100;    /* yellow */
+
+  --accent: #2a78d6;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(11, 11, 11, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #0d0d0d;
+    --surface-1: #1a1a19;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --grid: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --good-text: #0ca30c;
+
+    --series-outright: #3987e5;
+    --series-loan: #199e70;
+    --series-lease: #c98500;
+
+    --accent: #3987e5;
+    --shadow: none;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text-primary);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 20px 80px;
+}
+
+/* ------------------------------------------------------------ header --- */
+
+header.site {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  margin-bottom: 6px;
+}
+
+header.site h1 { font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+
+.fy-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.tagline { color: var(--text-secondary); margin: 0 0 24px; max-width: 74ch; }
+
+/* ------------------------------------------------------------ layout --- */
+
+.layout {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+/* Grid items default to min-width:auto, which lets wide content (the
+   breakdown table) blow out the page on small screens. */
+.layout > * { min-width: 0; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+.panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+
+.panel h2 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 14px;
+}
+
+/* ------------------------------------------------------------ inputs --- */
+
+.field { margin-bottom: 14px; }
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.field .hint { font-weight: 400; color: var(--text-muted); }
+
+.field input[type="number"],
+.field input[type="text"],
+.field select {
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--page);
+  border: 1px solid var(--baseline);
+  border-radius: 7px;
+}
+
+.field input:focus-visible, .field select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.input-prefix { position: relative; }
+.input-prefix > span {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  color: var(--text-muted); font-size: 14px; pointer-events: none;
+}
+.input-prefix > input { padding-left: 24px; }
+
+.seg {
+  display: flex;
+  border: 1px solid var(--baseline);
+  border-radius: 7px;
+  overflow: hidden;
+}
+.seg button {
+  flex: 1;
+  padding: 7px 4px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  background: var(--page);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.seg button + button { border-left: 1px solid var(--baseline); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+
+.check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text-secondary); }
+.check input { margin-top: 3px; accent-color: var(--accent); }
+
+details.advanced { border-top: 1px solid var(--grid); margin-top: 18px; padding-top: 12px; }
+details.advanced summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  list-style: none;
+  display: flex; align-items: center; gap: 6px;
+}
+details.advanced summary::-webkit-details-marker { display: none; }
+details.advanced summary::before { content: "▸"; transition: transform 0.15s; color: var(--text-muted); }
+details.advanced[open] summary::before { transform: rotate(90deg); }
+details.advanced .fields { margin-top: 12px; }
+
+.subhead {
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-muted); margin: 16px 0 8px;
+}
+.subhead:first-child { margin-top: 4px; }
+
+/* ------------------------------------------------------------ verdict --- */
+
+.verdict { margin-bottom: 20px; }
+
+.verdict .lead-in { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 6px; }
+
+.verdict .headline { font-size: 22px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.01em; }
+
+.verdict .headline .amount { font-size: 30px; }
+
+.verdict .sub { color: var(--text-secondary); margin: 0; font-size: 14px; }
+
+/* ------------------------------------------------------ method cards --- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 700px) {
+  .cards { grid-template-columns: 1fr; }
+}
+
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  border-top: 3px solid var(--series, var(--baseline));
+  position: relative;
+}
+
+.card[data-method="outright"] { --series: var(--series-outright); }
+.card[data-method="loan"] { --series: var(--series-loan); }
+.card[data-method="lease"] { --series: var(--series-lease); }
+
+.card .name { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; margin: 0 0 2px; }
+
+.card .cheapest-chip {
+  font-size: 11px; font-weight: 700;
+  color: var(--good-text);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+.card .net { font-size: 26px; font-weight: 700; margin: 6px 0 0; }
+.card .net-label { font-size: 12px; color: var(--text-muted); margin: 0 0 10px; }
+
+.card dl { margin: 0; font-size: 13px; }
+.card dl div { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; }
+.card dt { color: var(--text-secondary); }
+.card dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+
+/* ------------------------------------------------------------- chart --- */
+
+figure.chart { margin: 0 0 20px; }
+
+figure.chart figcaption { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+figure.chart .figsub { font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; }
+
+.chart svg { display: block; width: 100%; height: auto; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+.legend .key { display: inline-flex; align-items: center; gap: 6px; }
+.legend .swatch { width: 14px; height: 4px; border-radius: 2px; display: inline-block; }
+
+.viz-tooltip {
+  position: fixed;
+  z-index: 30;
+  pointer-events: none;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(11, 11, 11, 0.18);
+  padding: 8px 10px;
+  font-size: 12.5px;
+  min-width: 150px;
+  display: none;
+}
+.viz-tooltip .tt-title { font-weight: 700; margin-bottom: 4px; }
+.viz-tooltip .tt-row { display: flex; justify-content: space-between; gap: 14px; padding: 1px 0; }
+.viz-tooltip .tt-row .k { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); }
+.viz-tooltip .tt-row .swatch { width: 10px; height: 10px; border-radius: 3px; }
+.viz-tooltip .tt-row .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* --------------------------------------------------- breakdown table --- */
+
+.table-scroll { overflow-x: auto; }
+
+table.breakdown {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  min-width: 560px;
+}
+
+table.breakdown th, table.breakdown td { padding: 7px 10px; text-align: right; }
+table.breakdown th:first-child, table.breakdown td:first-child { text-align: left; }
+
+table.breakdown thead th {
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--text-muted); border-bottom: 1px solid var(--baseline);
+}
+table.breakdown thead th .dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 6px; vertical-align: baseline; }
+
+table.breakdown tbody td { border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+table.breakdown tbody td:first-child { color: var(--text-secondary); }
+table.breakdown td.credit { color: var(--good-text); }
+table.breakdown td.na { color: var(--text-muted); }
+
+table.breakdown tfoot td {
+  font-weight: 700; border-top: 2px solid var(--baseline);
+  font-variant-numeric: tabular-nums;
+}
+
+/* -------------------------------------------------------------- notes --- */
+
+.notes { font-size: 13.5px; color: var(--text-secondary); }
+.notes h3 { font-size: 14px; color: var(--text-primary); margin: 18px 0 6px; }
+.notes ul { padding-left: 20px; margin: 6px 0; }
+.notes li { margin: 4px 0; }
+.notes a { color: var(--accent); }
+.notes .sources li { overflow-wrap: anywhere; }
+
+.callout {
+  border-left: 3px solid var(--series-lease);
+  background: var(--page);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+
+footer.site {
+  margin-top: 34px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--grid);
+  padding-top: 14px;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  clip-path: inset(50%); overflow: hidden; white-space: nowrap;
+}
