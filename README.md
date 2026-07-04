@@ -1,4 +1,6 @@
-# Car Lease Tool — CarLeaseTool.com.au 🇦🇺
+# Car Calculator — CarCalculator.com.au 🇦🇺
+
+Presented by [Crown Money](https://www.crown.money/) — brand colours `#250B40` / `#E6DEEE` / white.
 
 A single-page website + calculator that compares the **true cost of owning the same
 car** three ways in Australia:
