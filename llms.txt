@@ -24,9 +24,10 @@
   LITO. Tax savings computed as the exact tax difference at the user's salary.
 - Novated lease: financier claims GST on the car (capped at $6,353), running
   costs packaged ex-GST, FBT neutralised by the Employee Contribution Method
-  (20% of base value post-tax), ATO minimum residuals (28.13% at 5 years)
-  plus 10% GST on the residual payout. Battery EVs under the threshold are
-  fully FBT-exempt and 100% pre-tax.
+  (20% of base value post-tax, plus the 1/11 GST the employer remits on that
+  contribution), ATO minimum residuals (28.13% at 5 years) plus 10% GST on
+  the residual payout. Battery EVs under the threshold are fully FBT-exempt
+  and 100% pre-tax.
 - Stamp duty: current schedules for NSW, VIC, QLD, SA, WA, TAS, NT and the
   ACT, including EV concessions in force at July 2026.
 - Opportunity cost: every outflow in every method is future-valued at the

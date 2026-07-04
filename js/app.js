@@ -464,8 +464,10 @@ function renderNotes(cmp, inputs) {
          FBT rules apply and part of the package must be paid post-tax.</div>`)
     : `<div class="callout"><strong>FBT on this lease</strong> is offset using the Employee Contribution
        Method: ${money(lease.postTaxAnnual)}/yr (20% of the car's base value) is deducted post-tax, which
-       reduces the FBT taxable value to nil; the rest of the package is pre-tax. Battery EVs under
-       ${money(d.fbt.evExemptionPriceCap)} skip this entirely — try the EV option to see the difference.</div>`;
+       reduces the FBT taxable value to nil — plus ${money(lease.postTaxAnnual / 11)}/yr GST the employer
+       must remit on that contribution (recovered through the package). The rest of the package is pre-tax.
+       Battery EVs under ${money(d.fbt.evExemptionPriceCap)} skip all of this — try the EV option to see
+       the difference.</div>`;
 
   $('notes').innerHTML = `
     ${evNote}

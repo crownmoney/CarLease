@@ -133,12 +133,13 @@ test('keeping the car: no resale credit, worth reported separately', () => {
   assert.equal(sold.cheapest.label, kept.cheapest.label);
 });
 
-test('settle: FV compounds the upfront hardest', () => {
+test('settle: FV compounds the upfront hardest, at the effective annual rate', () => {
   // Same nominal totals: lump sum now vs spread monthly
   const lump = settle({ upfront: 12000, monthly: 0 }, 1, 0.06, 0);
   const spread = settle({ upfront: 0, monthly: 1000 }, 1, 0.06, 0);
   assert.ok(lump.totalOutgoings > spread.totalOutgoings);
-  assert.ok(Math.abs(lump.totalOutgoings - 12000 * Math.pow(1.005, 12)) < 0.01);
+  // 6% effective annual: a lump held 12 months grows by exactly 6%
+  assert.ok(Math.abs(lump.totalOutgoings - 12000 * 1.06) < 0.01);
 });
 
 test('settle: timeline ends at netCost', () => {
@@ -213,6 +214,20 @@ test('novated lease: higher salary saves more tax', () => {
   const high = novatedLease({ ...baseInputs, salary: 220000 });
   assert.ok(high.annualTaxSaved > low.annualTaxSaved);
   assert.ok(high.netCost < low.netCost);
+});
+
+test('ECM contribution carries GST for FBT-liable cars, not for exempt EVs', () => {
+  const off = { ...baseInputs, includeOpportunityCost: false };
+  const petrol = novatedLease(off);
+  const row = petrol.rows.find((r) => r.label.includes('GST on employee contribution'));
+  // 1/11 of the 20%-of-price annual contribution, over the term
+  assert.ok(Math.abs(row.amount - (0.2 * 50000 / 11) * 5) < 1);
+  assert.ok(!row.info, 'ECM GST is a real cost, not informational');
+  const ev = novatedLease({
+    ...off, vehicleType: 'ev', price: 60000,
+    electricityPerKwh: 0.3, evKwhPer100km: 17, fuelPerLitre: 0, fuelLPer100km: 0,
+  });
+  assert.ok(!ev.rows.some((r) => r.label.includes('GST on employee contribution')));
 });
 
 test('GST credit on the car is capped at the car-limit credit', () => {

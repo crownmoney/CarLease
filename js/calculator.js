@@ -162,7 +162,9 @@ export function resaleValue(price, termYears, data = AU_DATA) {
  */
 export function settle({ upfront, monthly, terminal = 0 }, termYears, rate, resale, sell) {
   const N = termYears * 12;
-  const i = rate / 12;
+  // Savings/offset rates are effective annual — convert to the equivalent
+  // monthly rate rather than dividing by 12 (which would overstate growth)
+  const i = rate === 0 ? 0 : Math.pow(1 + rate, 1 / 12) - 1;
   const grow = (months) => Math.pow(1 + i, months);
   // FV of $1/month over `months` (payments at month-ends)
   const annuity = (months) => (i === 0 ? months : (grow(months) - 1) / i);
@@ -323,18 +325,22 @@ export function novatedLease(inputs, data = AU_DATA) {
   const financePayment = monthlyRepayment(financed, inputs.leaseRate, months, residual);
   const leaseInterest = financePayment * months + residual - financed;
 
-  // Packaged running costs are effectively GST-exclusive to the employee
-  // (employer claims input tax credits on the GST-able portion).
-  const runMonthlyExGst = (run.gstable / 1.1 + run.gstFree) / 12;
-  const adminMonthly = inputs.leaseAdminMonthly ?? data.lease.adminFeePerMonth;
-  const packageMonthly = financePayment + runMonthlyExGst + adminMonthly;
-  const packageAnnual = packageMonthly * 12;
-
   // FBT: statutory formula 20% of the base value (GST-inclusive price, excluding
   // stamp duty & rego). Eligible EVs are FBT-exempt → fully pre-tax.
   const fbtExempt =
     inputs.vehicleType === 'ev' && inputs.price <= data.fbt.evExemptionPriceCap;
   const requiredPostTax = fbtExempt ? 0 : data.fbt.statutoryRate * inputs.price;
+
+  // The ECM contribution is consideration for a taxable supply: the employer
+  // remits 1/11 of it as GST, and providers recover that cost through the package.
+  const ecmGstAnnual = requiredPostTax / 11;
+
+  // Packaged running costs are effectively GST-exclusive to the employee
+  // (employer claims input tax credits on the GST-able portion).
+  const runMonthlyExGst = (run.gstable / 1.1 + run.gstFree) / 12;
+  const adminMonthly = inputs.leaseAdminMonthly ?? data.lease.adminFeePerMonth;
+  const packageMonthly = financePayment + runMonthlyExGst + adminMonthly + ecmGstAnnual / 12;
+  const packageAnnual = packageMonthly * 12;
 
   const postTaxAnnual = Math.min(packageAnnual, requiredPostTax);
   const preTaxAnnual = packageAnnual - postTaxAnnual;
@@ -359,10 +365,19 @@ export function novatedLease(inputs, data = AU_DATA) {
     },
     { group: G.fin, label: 'Admin fees', amount: adminMonthly * months },
     ...runningRows(run, t, true),
+    ...(ecmGstAnnual > 0 ? [{
+      group: G.tax,
+      label: 'GST on employee contribution (ECM)',
+      amount: ecmGstAnnual * t,
+      note: 'The employer remits 1/11 of your post-tax FBT contribution as GST; providers recover it through the package',
+    }] : []),
     { group: G.tax, label: 'Income tax saved', amount: -annualTaxSaved * t },
     ...opportunityRow(s.opportunity, inputs),
     // Informational — already reflected in the financed amount / ex-GST running rows
-    { group: G.tax, label: 'GST saved on car', amount: -gstCredit, info: true },
+    {
+      group: G.tax, label: 'GST saved on car', amount: -gstCredit, info: true,
+      note: 'Claimed by the financier at purchase; note ~10% of the residual is paid back as GST at the end',
+    },
     { group: G.tax, label: 'GST saved on running costs', amount: -gstSavedRunning, info: true },
     { group: G.end, label: 'Residual payment (incl. GST)', amount: residualWithGst },
     resaleRow(resale, inputs),

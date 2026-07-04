@@ -31,7 +31,7 @@ python3 -m http.server 8000   # then open http://localhost:8000
 Run the unit tests with Node 18+:
 
 ```sh
-node --test test/
+node --test test/calculator.test.js
 ```
 
 ## What's modelled
@@ -43,7 +43,7 @@ Figures are current for **FY 2026-27** (income tax) and the **FBT year ending
 | Area | Treatment |
 |---|---|
 | Income tax | FY 2026-27 resident brackets (0 / **15** / 30 / 37 / 45%), 2% Medicare levy with low-income phase-in, low income tax offset. Tax savings are computed as the *actual difference* in tax at your salary, so bracket boundaries are handled exactly. |
-| FBT | 47% rate, statutory formula 20% of base value (GST-inclusive price excl. stamp duty & rego). The tool assumes FBT is neutralised with the **Employee Contribution Method** — 20% of base value paid from post-tax salary — which is how providers structure virtually all leases. |
+| FBT | 47% rate, statutory formula 20% of base value (GST-inclusive price excl. stamp duty & rego). The tool assumes FBT is neutralised with the **Employee Contribution Method** — 20% of base value paid from post-tax salary — which is how providers structure virtually all leases, **plus the 1/11 GST the employer must remit on that contribution** (a real package cost most simple calculators skip). |
 | EV exemption | Battery EVs at or under the LCT fuel-efficient threshold ($91,661 for 2026-27, measured at first retail sale) are FBT-exempt → the whole package is pre-tax. PHEVs lost the exemption on 1 April 2025 and are treated as ordinary cars. RFBA reporting still applies (noted in the UI). |
 | GST | The financier claims GST on the purchase, so the lease finances the GST-exclusive price (credit capped at **$6,353** = 1/11 of the $69,883 car limit). Employer input-tax credits make packaged running costs effectively GST-free (rego/CTP treated as GST-free). The end-of-lease **residual attracts 10% GST**. |
 | Residuals | ATO minimum residual values (ID 2002/1004): 65.63% / 56.25% / 46.88% / 37.50% / 28.13% for 1–5 year terms, applied to the amount financed. |

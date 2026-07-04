@@ -209,7 +209,7 @@ export const AU_DATA = {
           : t === 'hybrid'
             ? { low: 2.84, base45: 1278, mid: 4.81, base80: 2961.5 }
             : { low: 3.00, base45: 1350, mid: 5.22, base80: 3177 };
-        if (v < 45000) return v * (cat.low / 100);
+        if (v < 45000) return per(v, 100) * cat.low;
         if (v < 80000) return cat.base45 + per(v - 45000, 100) * cat.mid;
         return cat.base80 + per(v - 80000, 100) * 8.0;
       },
