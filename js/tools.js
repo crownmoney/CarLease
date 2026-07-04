@@ -442,6 +442,25 @@ function initLead() {
 
     const st = window.__ccState || {};
     const i = st.inputs || {};
+    const typeWord = { petrol: 'petrol car', hybrid: 'hybrid', ev: 'EV' }[i.vehicleType] || 'car';
+    // One email-ready block per method (pre-formatted strings, so the Zap
+    // needs no Formatter steps), keyed by stable names for easy mapping.
+    const methodBlock = (r) => ({
+      netCostDisplay: money(r.netCost),
+      perWeekDisplay: `${money(r.perWeek)}/week`,
+      rateDisplay: r.fundingRate != null
+        ? `${(r.fundingRate * 100).toFixed(1)}% p.a. — what your own money earns`
+        : r.impliedRate != null ? `${(r.impliedRate * 100).toFixed(1)}% p.a. effective` : '—',
+      isCheapest: st.cmp ? (r === st.cmp.cheapest ? 'yes' : 'no') : 'no',
+    });
+    let verdictLine = null;
+    if (st.cmp) {
+      const [best, second] = st.cmp.ranked;
+      verdictLine = `${best.label} wins — ${money(best.netCost)} over ${i.termYears} year` +
+        `${i.termYears > 1 ? 's' : ''}, ${money(second.netCost - best.netCost)} less than the ` +
+        `next-best option (${second.label.toLowerCase()}), ` +
+        (i.sellAtEnd ? 'with the car sold at the end.' : 'keeping the car at the end.');
+    }
     const payload = {
       name,
       email,
@@ -449,6 +468,15 @@ function initLead() {
       page: location.href,
       activeTab: (location.hash || '#calculator').replace('#', ''),
       submittedAt: new Date().toISOString(),
+      verdictLine,
+      cheapest: st.cmp ? st.cmp.cheapest.label : null,
+      scenarioSummary: st.inputs
+        ? `${money(i.price)} ${typeWord} in ${i.state} · ${i.termYears}-year term · ` +
+          `${money(i.salary)} salary · ${i.kmPerYear.toLocaleString('en-AU')} km/yr`
+        : null,
+      outright: st.cmp ? methodBlock(st.cmp.results[0]) : null,
+      loan: st.cmp ? methodBlock(st.cmp.results[1]) : null,
+      lease: st.cmp ? methodBlock(st.cmp.results[2]) : null,
       scenario: st.inputs ? {
         vehiclePrice: i.price,
         vehicleType: i.vehicleType,
@@ -466,7 +494,6 @@ function initLead() {
         perWeek: Math.round(r.perWeek),
         effectiveRatePct: r.impliedRate != null ? +(r.impliedRate * 100).toFixed(2) : null,
       })) : null,
-      cheapest: st.cmp ? st.cmp.cheapest.label : null,
     };
 
     try {

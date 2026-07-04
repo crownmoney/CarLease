@@ -1,0 +1,222 @@
+<!--
+  Car Calculator — "Your results" email template (for the Zapier email/Gmail step)
+  ================================================================================
+  HOW TO USE: paste this whole file into the HTML body of your Zapier
+  "Send Email" / Gmail action, then replace each {{TOKEN}} below with the
+  matching field from the webhook step's field picker:
+
+    {{NAME}}              → Name
+    {{VERDICT_LINE}}      → Verdict Line
+    {{SCENARIO_SUMMARY}}  → Scenario Summary
+    {{OUTRIGHT_NET}}      → Outright Net Cost Display
+    {{OUTRIGHT_WEEK}}     → Outright Per Week Display
+    {{OUTRIGHT_RATE}}     → Outright Rate Display
+    {{LOAN_NET}}          → Loan Net Cost Display
+    {{LOAN_WEEK}}         → Loan Per Week Display
+    {{LOAN_RATE}}         → Loan Rate Display
+    {{LEASE_NET}}         → Lease Net Cost Display
+    {{LEASE_WEEK}}        → Lease Per Week Display
+    {{LEASE_RATE}}        → Lease Rate Display
+    {{CHEAPEST}}          → Cheapest
+
+  Subject line suggestion:
+    Your car cost comparison — {{CHEAPEST}} wins ({{SCENARIO_SUMMARY}})
+
+  All numbers arrive pre-formatted ("$78,190", "$301/week", "-4.9% p.a."),
+  so no Zapier Formatter steps are needed.
+-->
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>Your car cost comparison</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f2eff6; font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <!-- preheader (hidden preview text) -->
+  <div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">
+    {{VERDICT_LINE}}
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f2eff6;">
+    <tr>
+      <td align="center" style="padding:28px 14px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px; max-width:100%;">
+
+          <!-- ============================================== header -->
+          <tr>
+            <td style="background-color:#250b40; border-radius:14px 14px 0 0; padding:26px 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="font-size:18px; font-weight:800; color:#ffffff; letter-spacing:-0.2px;">
+                    Car<span style="color:#e6deee;">Calculator</span><span style="font-weight:500; font-size:13px; color:#cfc0e2;">.com.au</span>
+                  </td>
+                  <td align="right">
+                    <a href="https://crownmoney.com.au" style="text-decoration:none; color:#cfc0e2;">
+                      <img src="https://storage.googleapis.com/crown_money/Logo%20%26%20Icon/Crown%20Money%20Cropped%20Logo.png"
+                        alt="Crown Money" height="30"
+                        style="height:30px; width:auto; border:0; display:block; color:#cfc0e2; font-size:13px;" />
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ============================================== verdict -->
+          <tr>
+            <td style="background-color:#2f1052; padding:30px 32px 34px;">
+              <p style="margin:0 0 6px; font-size:12px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#cfc0e2;">
+                Your results, {{NAME}}
+              </p>
+              <h1 style="margin:0 0 12px; font-size:26px; line-height:1.25; font-weight:800; color:#ffffff;">
+                {{VERDICT_LINE}}
+              </h1>
+              <p style="margin:0; font-size:14px; line-height:1.5; color:#cfc0e2;">
+                {{SCENARIO_SUMMARY}}
+              </p>
+            </td>
+          </tr>
+
+          <!-- ============================================== results -->
+          <tr>
+            <td style="background-color:#ffffff; padding:28px 32px 8px;">
+              <p style="margin:0 0 14px; font-size:12px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#8c8496;">
+                The three ways to pay
+              </p>
+
+              <!-- Buy outright -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                style="border:1px solid #eae5f0; border-left:4px solid #2a78d6; border-radius:10px; margin-bottom:12px;">
+                <tr>
+                  <td style="padding:16px 18px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="font-size:15px; font-weight:700; color:#1d1526;">Buy outright</td>
+                        <td align="right" style="font-size:20px; font-weight:800; color:#1d1526; white-space:nowrap;">{{OUTRIGHT_NET}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding-top:4px; font-size:13px; color:#554a63;">{{OUTRIGHT_RATE}}</td>
+                        <td align="right" style="padding-top:4px; font-size:13px; color:#554a63; white-space:nowrap;">{{OUTRIGHT_WEEK}}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Car loan -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                style="border:1px solid #eae5f0; border-left:4px solid #1baf7a; border-radius:10px; margin-bottom:12px;">
+                <tr>
+                  <td style="padding:16px 18px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="font-size:15px; font-weight:700; color:#1d1526;">Car loan</td>
+                        <td align="right" style="font-size:20px; font-weight:800; color:#1d1526; white-space:nowrap;">{{LOAN_NET}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding-top:4px; font-size:13px; color:#554a63;">{{LOAN_RATE}}</td>
+                        <td align="right" style="padding-top:4px; font-size:13px; color:#554a63; white-space:nowrap;">{{LOAN_WEEK}}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Novated lease -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                style="border:1px solid #eae5f0; border-left:4px solid #eda100; border-radius:10px; margin-bottom:6px;">
+                <tr>
+                  <td style="padding:16px 18px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="font-size:15px; font-weight:700; color:#1d1526;">Novated lease</td>
+                        <td align="right" style="font-size:20px; font-weight:800; color:#1d1526; white-space:nowrap;">{{LEASE_NET}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding-top:4px; font-size:13px; color:#554a63;">{{LEASE_RATE}}</td>
+                        <td align="right" style="padding-top:4px; font-size:13px; color:#554a63; white-space:nowrap;">{{LEASE_WEEK}}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:10px 0 0; font-size:12.5px; line-height:1.5; color:#8c8496;">
+                Cheapest for your scenario: <strong style="color:#006300;">{{CHEAPEST}}</strong>.
+                A financed option beats paying cash when its effective rate is below what your
+                money earns after tax.
+              </p>
+            </td>
+          </tr>
+
+          <!-- ============================================== CTA -->
+          <tr>
+            <td style="background-color:#ffffff; padding:22px 32px 30px;" align="center">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="background-color:#250b40; border-radius:9px;">
+                    <a href="https://carcalculator.com.au/#calculator"
+                      style="display:inline-block; padding:13px 28px; font-size:15px; font-weight:700; color:#ffffff; text-decoration:none;">
+                      Tweak the numbers →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:12px 0 0; font-size:12.5px; color:#8c8496;">
+                Change the car, the term, your salary — everything is editable.
+              </p>
+            </td>
+          </tr>
+
+          <!-- ============================================== Crown cross-sell -->
+          <tr>
+            <td style="background-color:#e6deee; padding:24px 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="font-size:16px; font-weight:800; color:#250b40; padding-bottom:6px;">
+                    Live mortgage free &amp; financially secure
+                  </td>
+                </tr>
+                <tr>
+                  <td style="font-size:13.5px; line-height:1.55; color:#554a63; padding-bottom:14px;">
+                    Car Calculator is presented by Crown Money. If the "what your money earns"
+                    number in your results got you thinking, that's what we do all day — helping
+                    Australians own their home faster and pay less interest.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <a href="https://crownmoney.com.au"
+                      style="display:inline-block; padding:11px 22px; background-color:#250b40; border-radius:8px; font-size:14px; font-weight:700; color:#ffffff; text-decoration:none;">
+                      Start now
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ============================================== footer -->
+          <tr>
+            <td style="background-color:#ffffff; border-radius:0 0 14px 14px; padding:22px 32px 26px; border-top:1px solid #eae5f0;">
+              <p style="margin:0 0 8px; font-size:11.5px; line-height:1.55; color:#8c8496;">
+                <strong>General information only — not financial, tax or credit advice.</strong>
+                Figures use published FY 2026-27 rates and market averages plus the details you
+                entered; novated lease quotes vary between providers, so always compare a real
+                quote. Consider your circumstances or a licensed adviser before deciding.
+              </p>
+              <p style="margin:0; font-size:11.5px; color:#8c8496;">
+                © 2026 CarCalculator.com.au · Crown Money ·
+                You received this because you asked for your results at carcalculator.com.au.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
