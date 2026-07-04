@@ -130,7 +130,7 @@ function renderCards(cmp, inputs) {
   cmp.results.forEach((r, i) => {
     const isBest = r === cmp.cheapest;
     const card = document.createElement('article');
-    card.className = 'card';
+    card.className = isBest ? 'card best' : 'card';
     card.dataset.method = METHOD_META[i].key;
     const facts = [];
     if (r.fundingRate != null && inputs.includeOpportunityCost) {
