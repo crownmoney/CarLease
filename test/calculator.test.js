@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 
 import { AU_DATA } from '../js/data.js';
 import {
-  incomeTax, taxSaved, stampDuty, monthlyRepayment, residualPct,
-  annualRunningCosts, resaleValue, buyOutright, carLoan, novatedLease, compareAll,
+  incomeTax, taxSaved, marginalRateAt, afterTaxReturn, stampDuty, monthlyRepayment,
+  residualPct, annualRunningCosts, resaleValue, settle,
+  buyOutright, carLoan, novatedLease, compareAll,
 } from '../js/calculator.js';
 
 const baseInputs = {
@@ -15,7 +16,7 @@ const baseInputs = {
   salary: 100000,
   kmPerYear: 13000,
   includeOpportunityCost: true,
-  savingsRate: 0.045,
+  investRate: 0.033, // after-tax
   loanRate: 0.075,
   leaseRate: 0.095,
   loanDeposit: 0,
@@ -23,7 +24,7 @@ const baseInputs = {
   insurancePerYear: 1800,
   servicePerYear: 600,
   tyresPerYear: 350,
-  fuelPerLitre: 1.95,
+  fuelPerLitre: 1.8,
   fuelLPer100km: 7.5,
   electricityPerKwh: 0,
   evKwhPer100km: 0,
@@ -33,7 +34,6 @@ const baseInputs = {
 /* ------------------------------------------------------------------ tax --- */
 
 test('income tax: FY2026-27 spot checks', () => {
-  // Below tax-free threshold (and below Medicare threshold)
   assert.equal(incomeTax(18000), 0);
   // $100k: 26,800×0.15 + 55,000×0.30 = 20,520 income tax + 2,000 Medicare, no LITO
   assert.ok(Math.abs(incomeTax(100000) - 22520) < 1);
@@ -54,21 +54,26 @@ test('income tax is monotonic and marginal rates never exceed 47%', () => {
 test('taxSaved equals the tax difference and is positive at a normal salary', () => {
   const saved = taxSaved(100000, 10000);
   assert.ok(Math.abs(saved - (incomeTax(100000) - incomeTax(90000))) < 1e-9);
-  // $90k-100k sits in the 30% bracket + 2% Medicare
-  assert.ok(Math.abs(saved - 3200) < 1);
+  assert.ok(Math.abs(saved - 3200) < 1); // 30% bracket + 2% Medicare
+});
+
+test('marginal rate and after-tax investment returns', () => {
+  assert.ok(Math.abs(marginalRateAt(100000) - 0.32) < 0.005);
+  // Offset is tax-free
+  assert.ok(Math.abs(afterTaxReturn('offset', 0.067, 100000) - 0.067) < 1e-9);
+  // Savings taxed at full marginal (~32%)
+  assert.ok(Math.abs(afterTaxReturn('savings', 0.048, 100000) - 0.048 * 0.68) < 0.001);
+  // Shares taxed at ~half marginal
+  assert.ok(Math.abs(afterTaxReturn('shares', 0.075, 100000) - 0.075 * 0.84) < 0.001);
 });
 
 /* ---------------------------------------------------------------- duty --- */
 
 test('stamp duty spot checks per published schedules', () => {
-  // NSW: 3% to $45k, then 5% — $50k → 1350 + 250 = 1600
-  assert.equal(stampDuty('NSW', 50000, 'petrol'), 1600);
-  // VIC passenger car under the ~$80,567 threshold: 4.2%
-  assert.equal(stampDuty('VIC', 50000, 'petrol'), 2100);
-  // QLD hybrids/EVs: 2% up to $100k
-  assert.equal(stampDuty('QLD', 50000, 'ev'), 1000);
-  // WA: $50k falls in the sliding band between $25k and $50k (6.5% at $50k+)
-  assert.equal(stampDuty('WA', 60000, 'petrol'), 3900);
+  assert.equal(stampDuty('NSW', 50000, 'petrol'), 1600); // 1350 + 250
+  assert.equal(stampDuty('VIC', 50000, 'petrol'), 2100); // 4.2%
+  assert.equal(stampDuty('QLD', 50000, 'ev'), 1000); // 2%
+  assert.equal(stampDuty('WA', 60000, 'petrol'), 3900); // 6.5% over $50k
 });
 
 test('stamp duty is non-negative and non-decreasing in value for every state', () => {
@@ -86,12 +91,9 @@ test('stamp duty is non-negative and non-decreasing in value for every state', (
 /* -------------------------------------------------------------- finance --- */
 
 test('monthlyRepayment closed-form sanity', () => {
-  // Zero interest: straight-line
   assert.ok(Math.abs(monthlyRepayment(12000, 0, 12) - 1000) < 1e-9);
-  // Known amortisation: $30k @ 6% over 60 months ≈ $579.98
   assert.ok(Math.abs(monthlyRepayment(30000, 0.06, 60) - 579.98) < 0.05);
-  // With a balloon equal to the principal, payments cover interest only
-  const p = monthlyRepayment(10000, 0.12, 12, 10000);
+  const p = monthlyRepayment(10000, 0.12, 12, 10000); // interest-only when balloon = principal
   assert.ok(Math.abs(p - 100) < 0.01);
 });
 
@@ -101,59 +103,86 @@ test('ATO minimum residuals', () => {
   assert.equal(residualPct(5), 0.2813);
 });
 
+/* --------------------------------------------------------------- settle --- */
+
+test('settle: zero rate reduces to nominal sums', () => {
+  const s = settle({ upfront: 1000, monthly: 100, terminal: 500 }, 2, 0, 300);
+  assert.ok(Math.abs(s.totalOutgoings - (1000 + 2400 + 500)) < 1e-9);
+  assert.ok(Math.abs(s.netCost - 3600) < 1e-9);
+  assert.equal(s.opportunity, 0);
+});
+
+test('settle: FV compounds the upfront hardest', () => {
+  // Same nominal totals: lump sum now vs spread monthly
+  const lump = settle({ upfront: 12000, monthly: 0 }, 1, 0.06, 0);
+  const spread = settle({ upfront: 0, monthly: 1000 }, 1, 0.06, 0);
+  assert.ok(lump.totalOutgoings > spread.totalOutgoings);
+  assert.ok(Math.abs(lump.totalOutgoings - 12000 * Math.pow(1.005, 12)) < 0.01);
+});
+
+test('settle: timeline ends at netCost', () => {
+  const s = settle({ upfront: 5000, monthly: 200, terminal: 1000 }, 3, 0.05, 2500);
+  assert.ok(Math.abs(s.timeline[2] - s.netCost) < 1e-6);
+});
+
 /* -------------------------------------------------------------- methods --- */
 
 test('running costs: EV uses electricity, ICE uses fuel', () => {
   const ice = annualRunningCosts(baseInputs);
-  assert.ok(Math.abs(ice.energy - (13000 / 100) * 7.5 * 1.95) < 1e-6);
+  assert.ok(Math.abs(ice.energy - (13000 / 100) * 7.5 * 1.8) < 1e-6);
   const ev = annualRunningCosts({
-    ...baseInputs, vehicleType: 'ev', electricityPerKwh: 0.32, evKwhPer100km: 16,
+    ...baseInputs, vehicleType: 'ev', electricityPerKwh: 0.3, evKwhPer100km: 17,
   });
-  assert.ok(Math.abs(ev.energy - (13000 / 100) * 16 * 0.32) < 1e-6);
+  assert.ok(Math.abs(ev.energy - (13000 / 100) * 17 * 0.3) < 1e-6);
   assert.ok(ev.energy < ice.energy);
 });
 
-test('each method: rows sum to net cost', () => {
-  const cmp = compareAll(baseInputs);
-  for (const r of cmp.results) {
-    const sum = r.rows.reduce((a, row) => a + row.amount, 0);
-    // Lease rows include informational GST-on-running savings already inside
-    // the ex-GST running row — exclude info rows from the reconciliation.
-    const recon = r.rows.filter((row) => !row.info).reduce((a, row) => a + row.amount, 0);
-    assert.ok(Math.abs(recon - r.netCost) < 1, `${r.label}: rows ${recon} vs net ${r.netCost}`);
-    assert.ok(sum <= recon + 1e-9);
+test('each method: non-info rows sum to net cost (with and without opportunity)', () => {
+  for (const oc of [true, false]) {
+    const cmp = compareAll({ ...baseInputs, includeOpportunityCost: oc });
+    for (const r of cmp.results) {
+      const recon = r.rows.filter((row) => !row.info).reduce((a, row) => a + row.amount, 0);
+      assert.ok(Math.abs(recon - r.netCost) < 1, `${r.label} oc=${oc}: rows ${recon} vs net ${r.netCost}`);
+    }
   }
 });
 
 test('loan costs more than cash when opportunity cost is off', () => {
   const inputs = { ...baseInputs, includeOpportunityCost: false };
-  const cash = buyOutright(inputs);
-  const loan = carLoan(inputs);
-  assert.ok(loan.netCost > cash.netCost, 'borrowing at 7.5% should cost more than cash');
+  assert.ok(carLoan(inputs).netCost > buyOutright(inputs).netCost);
+});
+
+test('opportunity cost hits the cash buyer hardest, and rises with the rate', () => {
+  const cmp = compareAll(baseInputs);
+  const [outright, loan, lease] = cmp.results;
+  assert.ok(outright.opportunity > loan.opportunity);
+  assert.ok(outright.opportunity > lease.opportunity);
+  const rich = buyOutright({ ...baseInputs, investRate: 0.067 });
+  assert.ok(rich.opportunity > outright.opportunity);
+  assert.ok(rich.netCost > outright.netCost);
 });
 
 test('timelines end at the net cost', () => {
-  const cmp = compareAll(baseInputs);
-  for (const r of cmp.results) {
-    assert.ok(
-      Math.abs(r.timeline[r.timeline.length - 1] - r.netCost) < 1,
-      `${r.label} timeline end ${r.timeline.at(-1)} != net ${r.netCost}`,
-    );
+  for (const oc of [true, false]) {
+    const cmp = compareAll({ ...baseInputs, includeOpportunityCost: oc });
+    for (const r of cmp.results) {
+      assert.ok(
+        Math.abs(r.timeline[r.timeline.length - 1] - r.netCost) < 1,
+        `${r.label} oc=${oc} timeline end ${r.timeline.at(-1)} != net ${r.netCost}`,
+      );
+    }
   }
 });
 
 test('eligible EV lease is FBT-exempt and fully pre-tax; expensive EV is not', () => {
-  const ev = novatedLease({
-    ...baseInputs, vehicleType: 'ev', price: 60000,
-    electricityPerKwh: 0.32, evKwhPer100km: 16, fuelPerLitre: 0, fuelLPer100km: 0,
-  });
+  const evInputs = {
+    ...baseInputs, vehicleType: 'ev',
+    electricityPerKwh: 0.3, evKwhPer100km: 17, fuelPerLitre: 0, fuelLPer100km: 0,
+  };
+  const ev = novatedLease({ ...evInputs, price: 60000 });
   assert.equal(ev.fbtExempt, true);
   assert.equal(ev.postTaxAnnual, 0);
-
-  const luxEv = novatedLease({
-    ...baseInputs, vehicleType: 'ev', price: 120000,
-    electricityPerKwh: 0.32, evKwhPer100km: 16, fuelPerLitre: 0, fuelLPer100km: 0,
-  });
+  const luxEv = novatedLease({ ...evInputs, price: 120000 });
   assert.equal(luxEv.fbtExempt, false);
   assert.ok(luxEv.postTaxAnnual > 0);
 });
@@ -166,12 +195,8 @@ test('novated lease: higher salary saves more tax', () => {
 });
 
 test('GST credit on the car is capped at the car-limit credit', () => {
-  const cheap = novatedLease(baseInputs); // 50k → full 1/11
-  assert.ok(Math.abs(cheap.rows.find((r) => r.label === 'GST saved on car').amount + 50000 / 11) < 1);
-  const dear = novatedLease({ ...baseInputs, price: 120000 });
-  assert.ok(
-    Math.abs(dear.rows.find((r) => r.label === 'GST saved on car').amount + AU_DATA.gst.maxCarCredit) < 1,
-  );
+  assert.ok(Math.abs(novatedLease(baseInputs).gstCredit - 50000 / 11) < 1);
+  assert.ok(Math.abs(novatedLease({ ...baseInputs, price: 120000 }).gstCredit - AU_DATA.gst.maxCarCredit) < 1);
 });
 
 test('resale override is respected everywhere', () => {
@@ -185,5 +210,13 @@ test('depreciation curve is decreasing', () => {
     const v = resaleValue(50000, yTerm);
     assert.ok(v < prev);
     prev = v;
+  }
+});
+
+test('every row carries a known group', () => {
+  const groups = new Set(['Buying the car', 'Financing', 'Running costs', 'Tax & investment', 'End of term']);
+  const cmp = compareAll(baseInputs);
+  for (const r of cmp.results) {
+    for (const row of r.rows) assert.ok(groups.has(row.group), `${r.label}: ${row.label} has group ${row.group}`);
   }
 });

@@ -85,6 +85,20 @@ export const AU_DATA = {
      Fuel ~$1.75-1.80/L mid-2026 (national avg $1.64 + excise discount unwinding);
      home EV charging ~$0.30/kWh, ~17 kWh/100km; ABS avg ~12-13.8k km/yr;
      comprehensive insurance ~$1,800/yr; capped-price servicing ~$600/yr. */
+  /* Where the money would otherwise sit — gross annual returns, July 2026.
+     Offset ≈ avg owner-occupier variable mortgage rate (~6.7-6.9%, Finder/
+     Canstar) and is effectively tax-free; high-interest savings ~4.8% fully
+     taxed; diversified shares ~7.5% long-run, taxed concessionally. */
+  invest: {
+    presets: {
+      offset: { label: 'Mortgage offset (tax-free)', rate: 0.067 },
+      savings: { label: 'High-interest savings (taxed)', rate: 0.048 },
+      shares: { label: 'Share portfolio (concessionally taxed)', rate: 0.075 },
+      custom: { label: 'Custom', rate: 0.05 },
+    },
+    default: 'savings',
+  },
+
   defaults: {
     savingsRate: 0.045,
     byVehicleType: {
@@ -222,5 +236,6 @@ export const AU_DATA = {
     { label: 'Canstar — average car insurance cost', url: 'https://www.canstar.com.au/car-insurance/what-does-car-insurance-cost/' },
     { label: 'Money.com.au — car loan rates (July 2026)', url: 'https://www.money.com.au/car-loans' },
     { label: 'NovatedLeaseAustralia — novated lease interest rates', url: 'https://www.novatedleaseaustralia.com.au/interest-rates' },
+    { label: 'Finder — average home loan interest rate (July 2026)', url: 'https://www.finder.com.au/home-loans/the-average-home-loan-interest-rate' },
   ],
 };

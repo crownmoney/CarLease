@@ -4,25 +4,84 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
-  <title>Car Cost Compare — buy, loan or novated lease (Australia)</title>
-  <meta name="description" content="Compare the true cost of owning a car in Australia: buying outright, a secured car loan, or a novated lease — with FY 2026-27 tax, FBT, GST and state stamp duty built in." />
+  <title>Car Lease Tool — novated lease vs car loan vs cash, compared properly | Australia</title>
+  <meta name="description" content="Free Australian calculator that shows whether a novated lease, a car loan or paying cash is really cheaper — with FY 2026-27 income tax, FBT, the EV exemption, GST and your state's stamp duty built in, plus what your money would have earned invested." />
+  <link rel="canonical" href="https://carleasetool.com.au/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Car Lease Tool — lease vs loan vs cash, compared properly" />
+  <meta property="og:description" content="See the true 1–5 year cost of owning the same car three ways, with Australian tax, FBT and stamp duty done right." />
+  <meta property="og:url" content="https://carleasetool.com.au/" />
+  <meta property="og:locale" content="en_AU" />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚗</text></svg>" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "Car Lease Tool",
+        "url": "https://carleasetool.com.au/",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Any",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "AUD" },
+        "description": "Compare the true cost of owning a car in Australia three ways: buying outright, a secured car loan, or a novated lease."
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is a novated lease?",
+            "acceptedAnswer": { "@type": "Answer", "text": "A three-way agreement between you, your employer and a finance company. The car and its running costs are paid out of your salary — mostly before tax — and the financier claims the GST on the purchase. At the end of the term you pay a residual value (plus GST) to own the car." }
+          },
+          {
+            "@type": "Question",
+            "name": "Why are electric vehicles so much cheaper on a novated lease?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Battery EVs priced under the luxury car tax fuel-efficient threshold ($91,661 for 2026-27) are exempt from fringe benefits tax, so the entire lease — car and running costs — can be paid from pre-tax salary. On a petrol car, part of the package must be paid post-tax to offset FBT." }
+          },
+          {
+            "@type": "Question",
+            "name": "Is it cheaper to buy a car with cash, a loan, or a novated lease?",
+            "acceptedAnswer": { "@type": "Answer", "text": "It depends on the car, your salary, your state and what your money could earn invested. For eligible EVs a novated lease usually wins clearly. For petrol cars it's closer — the lease's tax and GST savings compete against its higher finance rate and fees. This calculator runs your exact numbers." }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
-<div class="wrap">
-  <header class="site">
-    <h1>Car Cost Compare</h1>
-    <span class="fy-badge" id="fyBadge">Australia · FY 2026–27</span>
-  </header>
-  <p class="tagline">
-    See whether it's cheaper to <strong>buy outright</strong>, take a <strong>car loan</strong>, or
-    salary-package a <strong>novated lease</strong> — a like-for-like comparison where you end up
-    owning the same car at the end, with income tax, FBT, GST and your state's stamp duty built in.
-  </p>
 
-  <div class="layout">
-    <!-- ============================================================ inputs -->
+<!-- ================================================================ hero -->
+<header class="hero">
+  <div class="wrap hero-inner">
+    <div class="brand-row">
+      <span class="brand">Car<em>Lease</em>Tool<span class="tld">.com.au</span></span>
+      <span class="fy-badge hero-badge" id="fyBadge">FY 2026–27 figures</span>
+    </div>
+    <h1>Novated lease, car loan, or&nbsp;cash — which really costs&nbsp;less?</h1>
+    <p class="hero-sub">
+      The honest three-way comparison for Australia. Same car, same years, same end point —
+      you own it — with income tax, FBT, the EV exemption, GST and your state's stamp duty
+      done properly, and what your money would have earned <em>invested</em> counted for
+      every method, not just cash.
+    </p>
+    <div class="hero-cta-row">
+      <a class="cta" href="#calculator">Run your numbers</a>
+      <ul class="hero-chips" aria-label="What's included">
+        <li>FY 2026-27 tax &amp; FBT</li>
+        <li>All 8 states &amp; territories</li>
+        <li>EV exemption built in</li>
+        <li>Free — no sign-up</li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- ====================================================== calculator -->
+  <div class="layout" id="calculator">
     <form class="panel" id="inputs" autocomplete="off">
       <h2>Your details</h2>
 
@@ -76,9 +135,25 @@
       <div class="field check-field">
         <label class="check">
           <input type="checkbox" id="oppCost" checked />
-          <span>Count forgone interest on cash used to buy outright
-            <span class="hint">(what that money could have earned in savings / an offset account)</span></span>
+          <span>Count investment returns on money not yet spent
+            <span class="hint">(pay cash and you forfeit returns on the lump sum; finance and you
+            forfeit them on each repayment as it leaves — counted fairly for all three)</span></span>
         </label>
+      </div>
+
+      <div class="field" id="investFields">
+        <label for="investPreset">Where would that money otherwise be?</label>
+        <select id="investPreset"></select>
+        <div class="field-row" style="margin-top:8px">
+          <div class="field" style="margin-bottom:0">
+            <label for="investRate">Return <span class="hint">% p.a. before tax</span></label>
+            <input type="number" id="investRate" min="0" max="20" step="0.1" value="4.8" />
+          </div>
+          <div class="field after-tax-note" style="margin-bottom:0">
+            <label>&nbsp;</label>
+            <p class="hint" id="afterTaxNote" style="margin:8px 0 0"></p>
+          </div>
+        </div>
       </div>
 
       <details class="advanced">
@@ -104,10 +179,6 @@
               <label for="loanBalloon">Loan balloon <span class="hint">% of price</span></label>
               <input type="number" id="loanBalloon" min="0" max="50" step="5" value="0" />
             </div>
-          </div>
-          <div class="field">
-            <label for="savingsRate">Savings / offset return <span class="hint">% p.a. (for forgone interest)</span></label>
-            <input type="number" id="savingsRate" min="0" max="15" step="0.1" value="4.5" />
           </div>
 
           <p class="subhead">Running costs (per year)</p>
@@ -147,7 +218,6 @@
       </details>
     </form>
 
-    <!-- =========================================================== results -->
     <main>
       <section class="verdict" id="verdict" aria-live="polite"></section>
 
@@ -162,7 +232,7 @@
 
         <figure class="chart" id="lineChartFig" style="margin-bottom:0">
           <figcaption>Cumulative cost over the term</figcaption>
-          <div class="figsub">Money out the door each year, with the residual/balloon paid and the car sold at the end of the final year.</div>
+          <div class="figsub" id="lineChartSub"></div>
           <div class="legend" id="lineLegend"></div>
           <div id="lineChart"></div>
         </figure>
@@ -182,11 +252,105 @@
     </main>
   </div>
 
+  <!-- ======================================================= explainer -->
+  <section class="explainer" aria-labelledby="explainerH">
+    <h2 id="explainerH" class="section-h">The three ways to pay, in plain English</h2>
+    <div class="explain-cards">
+      <article class="explain-card" data-method="outright">
+        <h3>Buy outright</h3>
+        <p>Hand over the full price plus stamp duty on day one and the car is yours. No interest,
+          no fees — but that lump sum stops earning whatever it was earning in your offset,
+          savings or portfolio, and that quiet cost is real money over five years.</p>
+      </article>
+      <article class="explain-card" data-method="loan">
+        <h3>Car loan</h3>
+        <p>A secured loan spreads the cost into monthly repayments — typically around 6–9% p.a.
+          in mid-2026 for good credit. You pay interest and fees, but your savings stay invested
+          and keep compounding while the balance amortises.</p>
+      </article>
+      <article class="explain-card" data-method="lease">
+        <h3>Novated lease</h3>
+        <p>Your employer pays the lease and running costs from your salary — mostly pre-tax —
+          and the financier claims the GST on the car. You save income tax and GST, but pay a
+          higher finance rate, admin fees, and a residual (plus GST) at the end to own the car.
+          For eligible EVs the whole package is FBT-exempt and pre-tax, which is why they often
+          win by five figures.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============================================================= FAQ -->
+  <section class="faq" aria-labelledby="faqH">
+    <h2 id="faqH" class="section-h">Questions people actually ask</h2>
+
+    <details>
+      <summary>What is a novated lease?</summary>
+      <p>A three-way deal between you, your employer and a financier. The employer takes over
+        ("novates") your lease obligations and pays the car and its budgeted running costs out of
+        your salary — mostly before tax. If you change jobs, the lease un-novates and either moves
+        to your new employer or reverts to you as a normal lease.</p>
+    </details>
+    <details>
+      <summary>Why is an EV so much cheaper on a novated lease?</summary>
+      <p>Battery EVs under the luxury-car-tax fuel-efficient threshold (<strong>$91,661</strong> for
+        2026-27, measured at first retail sale) are exempt from fringe benefits tax. That means the
+        <em>entire</em> package — finance and running costs — comes out of pre-tax salary with no
+        post-tax offset required. Plug-in hybrids lost this exemption on 1 April 2025. Note the
+        benefit is still <em>reportable</em> (RFBA), which can affect things like HELP repayments
+        and the Medicare levy surcharge, though not your income tax.</p>
+    </details>
+    <details>
+      <summary>What's the residual (balloon) at the end of a lease?</summary>
+      <p>The ATO sets minimum residual values so a lease is genuinely a lease — for example
+        <strong>28.13%</strong> of the financed amount on a 5-year term. When the term ends you pay
+        the residual <em>plus 10% GST</em> to own the car, refinance it, or sell/trade the car and
+        keep anything above the residual, tax-free.</p>
+    </details>
+    <details>
+      <summary>Why do you count "forgone investment earnings"?</summary>
+      <p>Because a dollar spent today costs more than a dollar spent in year five. If you pay cash,
+        your lump sum stops earning from day one. If you finance, each repayment stops earning only
+        when it leaves your account. We future-value every outflow at your after-tax return —
+        mortgage-offset money is tax-free, savings interest is taxed at your marginal rate, share
+        returns roughly half — so all three methods are treated identically. Untick the option to
+        see plain cash totals instead.</p>
+    </details>
+    <details>
+      <summary>Does a higher salary really make leasing cheaper?</summary>
+      <p>Yes — the pre-tax deductions save tax at your marginal rate, so someone on $200k (45% + 2%
+        Medicare) saves more per packaged dollar than someone on $70k (30% + 2%). The calculator
+        computes the exact tax difference at your salary, including bracket crossings.</p>
+    </details>
+    <details>
+      <summary>Can I use this for a used car?</summary>
+      <p>Mostly. Stamp duty, loan and running-cost maths work the same. Two caveats: our default
+        resale curve assumes a new car (set your own resale value under Advanced), and novated
+        leases on older cars are restricted — most financiers require the car to be under
+        ~12-15 years old at the end of the term.</p>
+    </details>
+    <details>
+      <summary>Where do the figures come from?</summary>
+      <p>ATO published rates for FY 2026-27 (income tax, FBT, LCT, car limit, lease residuals),
+        state revenue offices for stamp duty, and market averages current at July 2026 for loan
+        and lease rates, insurance and running costs. Every source is linked in the methodology
+        panel above, and every assumption is editable.</p>
+    </details>
+    <details>
+      <summary>Is this financial advice?</summary>
+      <p>No — it's general information calculated from published rates and your inputs. It doesn't
+        consider your objectives, financial situation or needs. Novated lease quotes vary widely
+        between providers, so always compare a real quote, and consider licensed advice before
+        committing.</p>
+    </details>
+  </section>
+
   <footer class="site">
     <p><strong>General information only — not financial, tax or credit advice.</strong>
-      Figures use published rates and market averages current at July 2026 (FY 2026-27; FBT year ending 31 March 2027)
-      and reasonable estimates where quotes vary. Novated lease quotes differ between providers — always compare a real
-      quote, and consider your own circumstances or a licensed adviser before deciding.</p>
+      Figures use published rates and market averages current at July 2026 (FY 2026-27; FBT year ending
+      31 March 2027) and reasonable estimates where quotes vary. Novated lease quotes differ between
+      providers — always compare a real quote, and consider your own circumstances or a licensed adviser
+      before deciding.</p>
+    <p>© 2026 CarLeaseTool.com.au · Figures reviewed July 2026 · <a href="#calculator">Back to the calculator</a></p>
   </footer>
 </div>
 

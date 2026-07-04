@@ -4,6 +4,15 @@
  * Pure functions only: no DOM access, importable from both the browser
  * (type="module") and Node tests. All monetary values are AUD.
  *
+ * Cost model: every method is a stream of outflows — an upfront amount, a
+ * constant monthly amount, and a terminal amount (balloon / residual). When
+ * `includeOpportunityCost` is on, each outflow is future-valued to the end of
+ * the term at the buyer's after-tax investment return (`investRate`), so money
+ * not yet spent keeps earning regardless of which method you choose. That
+ * makes the comparison symmetric: the cash buyer forfeits returns on the lump
+ * sum, the borrower forfeits returns on each repayment as it leaves. With the
+ * toggle off the model reduces to plain nominal totals.
+ *
  * The AU_DATA constants (tax brackets, FBT settings, stamp duty schedules,
  * state charges, market defaults) live in data.js so figures can be updated
  * each financial year without touching the maths.
@@ -51,11 +60,30 @@ export function taxSaved(salary, deduction, data = AU_DATA) {
   return incomeTax(salary, data) - incomeTax(Math.max(0, salary - deduction), data);
 }
 
+/** Effective marginal rate (incl. Medicare & offset tapers) around `salary`. */
+export function marginalRateAt(salary, data = AU_DATA) {
+  const d = 500;
+  return (incomeTax(salary + d, data) - incomeTax(Math.max(0, salary - d), data)) / (2 * d);
+}
+
+/**
+ * After-tax annual return for money that would otherwise sit in `preset`:
+ *  - offset: reduces mortgage interest → equivalent return is tax-free
+ *  - savings: interest fully taxed at the marginal rate
+ *  - shares: long-run return taxed concessionally (≈ half the marginal rate,
+ *    approximating the CGT discount and franking credits)
+ */
+export function afterTaxReturn(preset, grossRate, salary, data = AU_DATA) {
+  const m = marginalRateAt(salary, data);
+  const taxFactor = { offset: 0, savings: 1, shares: 0.5 }[preset] ?? 1;
+  return grossRate * (1 - m * taxFactor);
+}
+
 /* --------------------------------------------------------- stamp duty --- */
 
 /**
  * Motor vehicle stamp duty on a private passenger-car purchase.
- * `vehicleType`: 'ev' | 'phev' | 'hybrid' | 'petrol' | 'diesel'
+ * `vehicleType`: 'ev' | 'hybrid' | 'petrol' | 'diesel'
  * Schedules per state live in data.js as piecewise rules.
  */
 export function stampDuty(state, dutiableValue, vehicleType, data = AU_DATA) {
@@ -87,8 +115,8 @@ export function residualPct(termYears, data = AU_DATA) {
 /* ------------------------------------------------------ running costs --- */
 
 /**
- * Annual running costs, GST-inclusive, split by whether GST applies
- * (novated packaging saves GST on the GST-able portion only).
+ * Annual running costs, GST-inclusive, itemised. `gstable` is the portion the
+ * novated packaging saves GST on (rego + CTP treated as GST-free).
  */
 export function annualRunningCosts(inputs, data = AU_DATA) {
   const s = data.states[inputs.state];
@@ -99,9 +127,18 @@ export function annualRunningCosts(inputs, data = AU_DATA) {
   } else {
     energy = (kmYear / 100) * inputs.fuelLPer100km * inputs.fuelPerLitre;
   }
-  const gstable = energy + inputs.insurancePerYear + inputs.servicePerYear + inputs.tyresPerYear;
-  const gstFree = s.regoCtpPerYear; // rego + CTP treated as GST-free (see README)
-  return { gstable, gstFree, total: gstable + gstFree, energy };
+  const serviceTyres = inputs.servicePerYear + inputs.tyresPerYear;
+  const gstable = energy + inputs.insurancePerYear + serviceTyres;
+  const gstFree = s.regoCtpPerYear;
+  return {
+    energy,
+    insurance: inputs.insurancePerYear,
+    serviceTyres,
+    rego: gstFree,
+    gstable,
+    gstFree,
+    total: gstable + gstFree,
+  };
 }
 
 /* ------------------------------------------------------- depreciation --- */
@@ -113,13 +150,78 @@ export function resaleValue(price, termYears, data = AU_DATA) {
   return price * retained;
 }
 
+/* ---------------------------------------------------- cost settlement --- */
+
+/**
+ * Settle an outflow stream {upfront, monthly, terminal} over `termYears`,
+ * future-valuing at annual `rate` (0 = nominal). Returns totals, the
+ * opportunity cost (FV − nominal), and a cumulative per-year timeline.
+ */
+export function settle({ upfront, monthly, terminal = 0 }, termYears, rate, resale) {
+  const N = termYears * 12;
+  const i = rate / 12;
+  const grow = (months) => Math.pow(1 + i, months);
+  // FV of $1/month over `months` (payments at month-ends)
+  const annuity = (months) => (i === 0 ? months : (grow(months) - 1) / i);
+
+  const nominal = upfront + monthly * N + terminal;
+  const fv = upfront * grow(N) + monthly * annuity(N) + terminal;
+  const opportunity = fv - nominal;
+
+  const timeline = [];
+  for (let y = 1; y <= termYears; y++) {
+    let c = upfront * grow(12 * y) + monthly * annuity(12 * y);
+    if (y === termYears) c += terminal - resale;
+    timeline.push(c);
+  }
+
+  return {
+    totalOutgoings: fv,
+    netCost: fv - resale,
+    opportunity,
+    timeline,
+  };
+}
+
 /* ============================================================ methods === */
 
 /**
- * Shared shape of a result:
- * { label, upfront, totalOutgoings, resale, netCost, perYear, perWeek,
- *   rows: [{label, amount, note?}], timeline: [cumulative cost at end of each year] }
+ * Shared result shape:
+ * { label, upfront, totalOutgoings, resale, netCost, opportunity, perYear,
+ *   perWeek, monthlyOutgoing, rows: [{group, label, amount, note?, info?}],
+ *   timeline, ...method extras }
+ * Rows with `info: true` are informational (already embedded in other rows).
  */
+
+const G = {
+  buy: 'Buying the car',
+  fin: 'Financing',
+  run: 'Running costs',
+  tax: 'Tax & investment',
+  end: 'End of term',
+};
+
+function runningRows(run, t, exGst) {
+  const f = (v) => (exGst ? v / 1.1 : v);
+  const note = exGst ? 'Packaged through the lease, so paid ex-GST' : undefined;
+  return [
+    { group: G.run, label: 'Fuel / electricity', amount: f(run.energy) * t, note },
+    { group: G.run, label: 'Insurance', amount: f(run.insurance) * t, note },
+    { group: G.run, label: 'Servicing & tyres', amount: f(run.serviceTyres) * t, note },
+    { group: G.run, label: 'Rego & CTP', amount: run.rego * t },
+  ];
+}
+
+function opportunityRow(opportunity, inputs) {
+  if (!inputs.includeOpportunityCost) return [];
+  return [{
+    group: G.tax,
+    label: 'Forgone investment earnings',
+    amount: opportunity,
+    note: `What each dollar would have earned at ${(inputs.investRate * 100).toFixed(1)}% p.a. ` +
+      'after tax between leaving your pocket and the end of the term',
+  }];
+}
 
 /** Method 1 — buy outright with cash. */
 export function buyOutright(inputs, data = AU_DATA) {
@@ -127,42 +229,20 @@ export function buyOutright(inputs, data = AU_DATA) {
   const run = annualRunningCosts(inputs, data);
   const t = inputs.termYears;
   const resale = inputs.resaleOverride ?? resaleValue(inputs.price, t, data);
+  const rate = inputs.includeOpportunityCost ? inputs.investRate : 0;
 
   const upfront = inputs.price + duty;
-  const runningTotal = run.total * t;
-
-  // Opportunity cost: interest the purchase cash could have earned (optional)
-  let opportunity = 0;
-  if (inputs.includeOpportunityCost) {
-    opportunity = upfront * (Math.pow(1 + inputs.savingsRate, t) - 1);
-  }
-
-  const totalOutgoings = upfront + runningTotal + opportunity;
-  const netCost = totalOutgoings - resale;
+  const s = settle({ upfront, monthly: run.total / 12 }, t, rate, resale);
 
   const rows = [
-    { label: 'Vehicle price (incl. GST)', amount: inputs.price },
-    { label: 'Stamp duty', amount: duty },
-    { label: `Running costs (${t} yrs)`, amount: runningTotal },
+    { group: G.buy, label: 'Vehicle price (incl. GST)', amount: inputs.price },
+    { group: G.buy, label: 'Stamp duty', amount: duty },
+    ...runningRows(run, t, false),
+    ...opportunityRow(s.opportunity, inputs),
+    { group: G.end, label: 'Less: resale value', amount: -resale },
   ];
-  if (inputs.includeOpportunityCost) {
-    rows.push({
-      label: 'Forgone interest on cash',
-      amount: opportunity,
-      note: `${(inputs.savingsRate * 100).toFixed(1)}% p.a. on the upfront amount`,
-    });
-  }
-  rows.push({ label: 'Less: resale value', amount: -resale });
 
-  const timeline = [];
-  for (let y = 1; y <= t; y++) {
-    let c = upfront + run.total * y;
-    if (inputs.includeOpportunityCost) c += upfront * (Math.pow(1 + inputs.savingsRate, y) - 1);
-    if (y === t) c -= resale;
-    timeline.push(c);
-  }
-
-  return finishResult('Buy outright', upfront, totalOutgoings, resale, netCost, rows, timeline, t, {
+  return finishResult('Buy outright', upfront, s, resale, rows, t, {
     monthlyOutgoing: run.total / 12,
   });
 }
@@ -174,42 +254,35 @@ export function carLoan(inputs, data = AU_DATA) {
   const t = inputs.termYears;
   const months = t * 12;
   const resale = inputs.resaleOverride ?? resaleValue(inputs.price, t, data);
+  const rate = inputs.includeOpportunityCost ? inputs.investRate : 0;
 
   const deposit = inputs.loanDeposit || 0;
-  const balloonPct = inputs.loanBalloonPct || 0;
   const financed = inputs.price + duty - deposit + data.loan.applicationFee;
-  const balloon = inputs.price * balloonPct;
+  const balloon = inputs.price * (inputs.loanBalloonPct || 0);
   const payment = monthlyRepayment(financed, inputs.loanRate, months, balloon);
-
-  const repaymentsTotal = payment * months;
+  const interest = payment * months + balloon - financed;
   const monthlyFees = data.loan.monthlyFee * months;
-  const interest = repaymentsTotal + balloon - financed;
-  const runningTotal = run.total * t;
 
-  const totalOutgoings = deposit + repaymentsTotal + balloon + monthlyFees + runningTotal;
-  const netCost = totalOutgoings - resale;
+  const s = settle(
+    { upfront: deposit, monthly: payment + data.loan.monthlyFee + run.total / 12, terminal: balloon },
+    t, rate, resale,
+  );
 
   const rows = [
-    { label: 'Vehicle price (incl. GST)', amount: inputs.price },
-    { label: 'Stamp duty', amount: duty },
+    { group: G.buy, label: 'Vehicle price (incl. GST)', amount: inputs.price },
+    { group: G.buy, label: 'Stamp duty', amount: duty },
     {
-      label: 'Loan interest',
-      amount: interest,
-      note: `${(inputs.loanRate * 100).toFixed(2)}% p.a. over ${t} yrs`,
+      group: G.fin, label: 'Loan interest', amount: interest,
+      note: `${(inputs.loanRate * 100).toFixed(2)}% p.a. over ${t} yrs` +
+        (balloon ? `, ${Math.round(balloon)} balloon` : ''),
     },
-    { label: 'Loan fees', amount: data.loan.applicationFee + monthlyFees },
-    { label: `Running costs (${t} yrs)`, amount: runningTotal },
-    { label: 'Less: resale value', amount: -resale },
+    { group: G.fin, label: 'Loan fees', amount: data.loan.applicationFee + monthlyFees },
+    ...runningRows(run, t, false),
+    ...opportunityRow(s.opportunity, inputs),
+    { group: G.end, label: 'Less: resale value', amount: -resale },
   ];
 
-  const timeline = [];
-  for (let y = 1; y <= t; y++) {
-    let c = deposit + (payment + data.loan.monthlyFee) * 12 * y + run.total * y;
-    if (y === t) c += balloon - resale;
-    timeline.push(c);
-  }
-
-  return finishResult('Car loan', deposit, totalOutgoings, resale, netCost, rows, timeline, t, {
+  return finishResult('Car loan', deposit, s, resale, rows, t, {
     monthlyOutgoing: payment + data.loan.monthlyFee + run.total / 12,
     monthlyRepayment: payment,
     interest,
@@ -224,15 +297,16 @@ export function novatedLease(inputs, data = AU_DATA) {
   const t = inputs.termYears;
   const months = t * 12;
   const resale = inputs.resaleOverride ?? resaleValue(inputs.price, t, data);
+  const rate = inputs.includeOpportunityCost ? inputs.investRate : 0;
 
   // GST on the car is claimed by the financier (capped at 1/11 of the car limit),
   // so the amount financed is the GST-exclusive price (up to the cap) + on-roads.
-  const gstOnCar = inputs.price / 11;
-  const gstCredit = Math.min(gstOnCar, data.gst.maxCarCredit);
+  const gstCredit = Math.min(inputs.price / 11, data.gst.maxCarCredit);
   const financed = inputs.price - gstCredit + duty + data.lease.establishmentFee;
 
   const residual = financed * residualPct(t, data);
   const financePayment = monthlyRepayment(financed, inputs.leaseRate, months, residual);
+  const leaseInterest = financePayment * months + residual - financed;
 
   // Packaged running costs are effectively GST-exclusive to the employee
   // (employer claims input tax credits on the GST-able portion).
@@ -245,48 +319,41 @@ export function novatedLease(inputs, data = AU_DATA) {
   // stamp duty & rego). Eligible EVs are FBT-exempt → fully pre-tax.
   const fbtExempt =
     inputs.vehicleType === 'ev' && inputs.price <= data.fbt.evExemptionPriceCap;
-  const fbtBaseValue = inputs.price;
-  const requiredPostTax = fbtExempt ? 0 : data.fbt.statutoryRate * fbtBaseValue;
+  const requiredPostTax = fbtExempt ? 0 : data.fbt.statutoryRate * inputs.price;
 
   const postTaxAnnual = Math.min(packageAnnual, requiredPostTax);
   const preTaxAnnual = packageAnnual - postTaxAnnual;
-
   const annualTaxSaved = taxSaved(inputs.salary, preTaxAnnual, data);
   const gstSavedRunning = (run.gstable - run.gstable / 1.1) * t;
 
-  const residualWithGst = residual * 1.1; // residual payment attracts GST
-  const totalOutgoings = packageAnnual * t - annualTaxSaved * t + residualWithGst;
-  const netCost = totalOutgoings - resale;
+  const residualWithGst = residual * 1.1; // residual payout attracts GST
+  const netMonthly = packageMonthly - annualTaxSaved / 12;
 
-  const leaseInterest = financePayment * months + residual - financed;
+  const s = settle(
+    { upfront: 0, monthly: netMonthly, terminal: residualWithGst },
+    t, rate, resale,
+  );
 
   const rows = [
     {
+      group: G.fin,
       label: 'Lease finance payments',
       amount: financePayment * months,
       note: `${Math.round(financed)} financed (price − GST credit + stamp duty + establishment fee) ` +
         `at ${(inputs.leaseRate * 100).toFixed(2)}% p.a.; includes ${Math.round(leaseInterest)} interest`,
     },
-    { label: 'Admin fees', amount: adminMonthly * months },
-    { label: `Running costs (${t} yrs, ex-GST)`, amount: (run.gstable / 1.1 + run.gstFree) * t },
-    { label: 'Income tax saved', amount: -annualTaxSaved * t },
-    { label: 'Residual payment (incl. GST)', amount: residualWithGst },
-    // Informational — already reflected in the financed amount / ex-GST running row
-    { label: 'GST saved on car', amount: -gstCredit, info: true },
-    { label: 'GST saved on running costs', amount: -gstSavedRunning, info: true },
-    { label: 'Less: resale value', amount: -resale },
+    { group: G.fin, label: 'Admin fees', amount: adminMonthly * months },
+    ...runningRows(run, t, true),
+    { group: G.tax, label: 'Income tax saved', amount: -annualTaxSaved * t },
+    ...opportunityRow(s.opportunity, inputs),
+    // Informational — already reflected in the financed amount / ex-GST running rows
+    { group: G.tax, label: 'GST saved on car', amount: -gstCredit, info: true },
+    { group: G.tax, label: 'GST saved on running costs', amount: -gstSavedRunning, info: true },
+    { group: G.end, label: 'Residual payment (incl. GST)', amount: residualWithGst },
+    { group: G.end, label: 'Less: resale value', amount: -resale },
   ];
 
-  const timeline = [];
-  for (let y = 1; y <= t; y++) {
-    let c = (packageAnnual - annualTaxSaved) * y;
-    if (y === t) c += residualWithGst - resale;
-    timeline.push(c);
-  }
-
-  const netMonthly = (packageAnnual - annualTaxSaved) / 12;
-
-  return finishResult('Novated lease', 0, totalOutgoings, resale, netCost, rows, timeline, t, {
+  return finishResult('Novated lease', 0, s, resale, rows, t, {
     monthlyOutgoing: netMonthly,
     packageMonthly,
     financePayment,
@@ -296,20 +363,22 @@ export function novatedLease(inputs, data = AU_DATA) {
     preTaxAnnual,
     postTaxAnnual,
     annualTaxSaved,
+    gstCredit,
   });
 }
 
-function finishResult(label, upfront, totalOutgoings, resale, netCost, rows, timeline, termYears, extra) {
+function finishResult(label, upfront, settled, resale, rows, termYears, extra) {
   return {
     label,
     upfront,
-    totalOutgoings,
+    totalOutgoings: settled.totalOutgoings,
     resale,
-    netCost,
-    perYear: netCost / termYears,
-    perWeek: netCost / (termYears * 52),
+    netCost: settled.netCost,
+    opportunity: settled.opportunity,
+    perYear: settled.netCost / termYears,
+    perWeek: settled.netCost / (termYears * 52),
     rows,
-    timeline,
+    timeline: settled.timeline,
     ...extra,
   };
 }

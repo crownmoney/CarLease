@@ -2,7 +2,7 @@
    breakdown table and methodology notes. No calculation logic lives here. */
 
 import { AU_DATA } from './data.js';
-import { compareAll, incomeTax, stampDuty } from './calculator.js';
+import { compareAll, stampDuty, afterTaxReturn, marginalRateAt } from './calculator.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -59,15 +59,20 @@ function readInputs() {
     return Number.isFinite(v) ? v : fallback;
   };
   const resaleRaw = $('resale').value.trim();
+  const salary = num('salary', 100000);
+  const investPreset = $('investPreset').value;
+  const investGross = num('investRate', 4.8) / 100;
   return {
     price: num('price', 50000),
     vehicleType,
     state: $('state').value,
     termYears: parseInt($('term').value, 10),
-    salary: num('salary', 100000),
+    salary,
     kmPerYear: num('km', 13000),
     includeOpportunityCost: $('oppCost').checked,
-    savingsRate: num('savingsRate', 4.5) / 100,
+    investPreset,
+    investGross,
+    investRate: afterTaxReturn(investPreset, investGross, salary),
     loanRate: num('loanRate', 7.5) / 100,
     leaseRate: num('leaseRate', 9.5) / 100,
     loanDeposit: num('loanDeposit', 0),
@@ -94,7 +99,11 @@ function renderVerdict(cmp, inputs) {
     <p class="headline">${best.label} — <span class="amount">${money(best.netCost)}</span>
       over ${t} year${t > 1 ? 's' : ''}</p>
     <p class="sub">That's ${money(diff)} less than the next-best option (${second.label.toLowerCase()}),
-      or about ${money(best.netCost / (t * 12))}/month once the car is sold at the end.</p>`;
+      or about ${money(best.netCost / (t * 12))}/month once the car is sold at the end.
+      ${inputs.includeOpportunityCost
+        ? `Costs are in end-of-term dollars — money not yet spent keeps earning
+           ${(inputs.investRate * 100).toFixed(1)}% p.a. after tax for every method.`
+        : 'Costs are plain cash totals — investment returns on unspent money are not counted.'}</p>`;
 }
 
 /* --------------------------------------------------------------- cards --- */
@@ -118,6 +127,7 @@ function renderCards(cmp, inputs) {
     }
     if (r.balloon > 0) facts.push(['Balloon at end', money(r.balloon)]);
     if (r.residualWithGst != null) facts.push(['Residual at end (incl. GST)', money(r.residualWithGst)]);
+    if (inputs.includeOpportunityCost) facts.push(['Forgone earnings', money(r.opportunity)]);
     facts.push(['Cost per week', money(r.perWeek)]);
 
     card.innerHTML = `
@@ -185,6 +195,9 @@ function renderBarChart(cmp, inputs) {
 
 function renderLineChart(cmp, inputs) {
   const t = inputs.termYears;
+  $('lineChartSub').textContent = inputs.includeOpportunityCost
+    ? 'Money out the door plus forgone investment earnings to date, with the residual/balloon paid and the car sold at the end of the final year.'
+    : 'Money out the door each year, with the residual/balloon paid and the car sold at the end of the final year.';
   // Series: year 0 (drive-away outlay) through year t (residual paid, car sold)
   const shortNames = ['Outright', 'Loan', 'Lease'];
   const series = cmp.results.map((r, i) => ({
@@ -325,38 +338,56 @@ function bindTooltip(el, htmlFn) {
 
 /* ------------------------------------------------------ breakdown table --- */
 
+const GROUP_ORDER = ['Buying the car', 'Financing', 'Running costs', 'Tax & investment', 'End of term'];
+
 function renderBreakdown(cmp) {
-  // Union of row labels across methods, preserving first-seen order
-  const order = [];
+  // Per group, union of row labels across methods in first-seen order
   const infoLabels = new Set();
   const byMethod = cmp.results.map((r) => {
     const map = new Map();
     for (const row of r.rows) {
       map.set(row.label, row);
-      if (!order.includes(row.label)) order.push(row.label);
       if (row.info) infoLabels.add(row.label);
     }
     return map;
   });
+  const labelsByGroup = new Map(GROUP_ORDER.map((g) => [g, []]));
+  cmp.results.forEach((r) => r.rows.forEach((row) => {
+    const arr = labelsByGroup.get(row.group);
+    if (arr && !arr.includes(row.label)) arr.push(row.label);
+  }));
+  // Resale credit reads best as the final line before the total
+  const endLabels = labelsByGroup.get('End of term');
+  if (endLabels.includes('Less: resale value')) {
+    endLabels.splice(endLabels.indexOf('Less: resale value'), 1);
+    endLabels.push('Less: resale value');
+  }
 
   const head = `<thead><tr><th>Item</th>${cmp.results
     .map((r, i) => `<th><span class="dot" style="background:${seriesColor(i)}"></span>${r.label}</th>`)
     .join('')}</tr></thead>`;
 
-  const body = order.map((label) => {
+  const rowHtml = (label) => {
     const cells = byMethod.map((m) => {
       const row = m.get(label);
       if (!row) return '<td class="na">—</td>';
       const cls = row.amount < 0 ? ' class="credit"' : '';
-      const note = row.note ? ` title="${row.note}"` : '';
+      const note = row.note ? ` title="${row.note.replace(/"/g, '&quot;')}"` : '';
       return `<td${cls}${note}>${row.amount < 0 ? '−' + money(-row.amount) : money(row.amount)}</td>`;
     });
     return `<tr><td>${label}${infoLabels.has(label) ? ' †' : ''}</td>${cells.join('')}</tr>`;
+  };
+
+  const body = GROUP_ORDER.map((g) => {
+    const labels = labelsByGroup.get(g);
+    if (!labels.length) return '';
+    return `<tr class="group-row"><td colspan="4">${g}</td></tr>` + labels.map(rowHtml).join('');
   }).join('');
 
   const footnote = infoLabels.size
     ? `<tr><td colspan="4" style="font-size:12px;color:var(--text-muted);border:none">
-         † shown for information — this saving is already built into the rows above, so it isn't added again.</td></tr>`
+         † shown for information — this saving is already built into the rows above, so it isn't added again.
+         Lease running costs are the ex-GST amounts you actually pay through the package.</td></tr>`
     : '';
   const foot = `<tfoot><tr><td>Net cost of ownership</td>${cmp.results
     .map((r) => `<td>${money(r.netCost)}</td>`).join('')}</tr>${footnote}</tfoot>`;
@@ -393,16 +424,14 @@ function renderNotes(cmp, inputs) {
     <h3>The three methods, like for like</h3>
     <ul>
       <li><strong>Buy outright</strong> — pay ${money(inputs.price + duty)} up front (price + ${money(duty)}
-        ${inputs.state} stamp duty)${inputs.includeOpportunityCost
-          ? `, plus the interest that cash stops earning (${(inputs.savingsRate * 100).toFixed(1)}% p.a.)`
-          : ''}. You own the car from day one.</li>
+        ${inputs.state} stamp duty). You own the car from day one.</li>
       <li><strong>Car loan</strong> — secured new-car loan at ${(inputs.loanRate * 100).toFixed(2)}% p.a.
         (comparison-rate territory for a good-credit borrower in mid-2026), on-road costs financed,
         ${money(d.loan.applicationFee)} application fee and ${money(d.loan.monthlyFee)}/month account fee.</li>
       <li><strong>Novated lease</strong> — fully-maintained lease salary-packaged through your employer at an
         effective ${(inputs.leaseRate * 100).toFixed(2)}% p.a. The financier claims the GST on the car
         (capped at ${money(d.gst.maxCarCredit)}), running costs are packaged ex-GST, and pre-tax deductions
-        save tax at your marginal rate (${(marginal * 100).toFixed(0)}% + 2% Medicare at a
+        save tax at your effective marginal rate (≈${(marginal * 100).toFixed(0)}% incl. Medicare at a
         ${money(inputs.salary)} salary). At the end you pay the ATO-minimum residual
         (${(d.lease.residuals[inputs.termYears] * 100).toFixed(2)}% of the financed amount) <em>plus 10% GST</em>
         to own the car.</li>
@@ -425,9 +454,12 @@ function renderNotes(cmp, inputs) {
         establishment (typical of major providers; quotes vary widely — always compare a real quote).</li>
       <li>Interest paid, fees, and FBT are personal costs — none of the three methods is tax-deductible for
         a purely private-use car outside salary packaging.</li>
-      ${inputs.includeOpportunityCost ? `<li>Forgone interest is counted on the upfront lump sum only —
-        monthly repayments and salary deductions aren't separately discounted. Untick the option to compare
-        pure cash totals.</li>` : ''}
+      ${inputs.includeOpportunityCost ? `<li>Investment returns: every dollar is assumed to sit in
+        <em>${AU_DATA.invest.presets[inputs.investPreset].label.toLowerCase()}</em> earning
+        ${(inputs.investGross * 100).toFixed(1)}% p.a. (${(inputs.investRate * 100).toFixed(1)}% after tax
+        at your marginal rate) until the moment it's spent, then each outflow is valued at the end of the
+        term. This treats all three methods identically — the cash buyer forfeits returns on the lump sum,
+        the borrower and lessee on each payment as it leaves. Untick the option for plain cash totals.</li>` : ''}
     </ul>
 
     <h3>Sources</h3>
@@ -436,15 +468,22 @@ function renderNotes(cmp, inputs) {
     </ul>`;
 }
 
-function marginalRate(salary) {
-  const b = [...AU_DATA.tax.brackets].reverse().find((br) => salary > br.min);
-  return b ? b.rate : 0;
-}
+const marginalRate = (salary) => marginalRateAt(salary);
 
 /* ---------------------------------------------------------------- wire --- */
 
+function syncInvestUI(inputs) {
+  $('investFields').style.display = $('oppCost').checked ? '' : 'none';
+  const m = marginalRate(inputs.salary);
+  const taxWord = { offset: 'tax-free', savings: 'interest taxed', shares: 'concessionally taxed' }[
+    inputs.investPreset] ?? 'interest taxed';
+  $('afterTaxNote').textContent =
+    `≈ ${(inputs.investRate * 100).toFixed(1)}% after tax (${taxWord}; your marginal rate ≈ ${(m * 100).toFixed(0)}%)`;
+}
+
 function update() {
   const inputs = readInputs();
+  syncInvestUI(inputs);
   const cmp = compareAll(inputs);
   renderVerdict(cmp, inputs);
   renderCards(cmp, inputs);
@@ -454,8 +493,24 @@ function update() {
   renderNotes(cmp, inputs);
 }
 
+function populateInvestPresets() {
+  const sel = $('investPreset');
+  for (const [key, p] of Object.entries(AU_DATA.invest.presets)) {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = p.label;
+    sel.appendChild(opt);
+  }
+  sel.value = AU_DATA.invest.default;
+  $('investRate').value = (AU_DATA.invest.presets[sel.value].rate * 100).toFixed(1);
+  sel.addEventListener('change', () => {
+    $('investRate').value = (AU_DATA.invest.presets[sel.value].rate * 100).toFixed(1);
+  });
+}
+
 function init() {
   populateStates();
+  populateInvestPresets();
   applyVehicleTypeDefaults();
 
   $('vehicleType').querySelectorAll('button').forEach((btn) => {

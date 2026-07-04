@@ -1,13 +1,23 @@
-# Car Cost Compare — Australia 🇦🇺
+# Car Lease Tool — CarLeaseTool.com.au 🇦🇺
 
-A single-page tool that compares the **true cost of owning the same car** three ways:
+A single-page website + calculator that compares the **true cost of owning the same
+car** three ways in Australia:
 
-1. **Buy outright** — cash, including what that cash stops earning,
+1. **Buy outright** — cash,
 2. **Car loan** — secured new-car finance with on-roads financed,
 3. **Novated lease** — fully-maintained, salary-packaged through your employer.
 
 All three paths end with you owning the car, and the same estimated resale value is
 credited back — so the difference between the columns is purely what each path costs.
+
+**Symmetric opportunity cost.** When the "count investment returns" toggle is on
+(default), every outflow in every method is future-valued to the end of the term at
+the buyer's *after-tax* investment return — the cash buyer forfeits returns on the
+lump sum from day one, the borrower and lessee forfeit them on each payment as it
+leaves. Presets model where the money would otherwise sit: **mortgage offset**
+(~6.7%, tax-free), **high-interest savings** (~4.8%, interest taxed at the marginal
+rate) or **shares** (~7.5%, taxed at roughly half the marginal rate, approximating
+the CGT discount), plus a custom rate. Toggle off for plain cash totals.
 
 **No build step, no dependencies.** Open `index.html` in a browser, or serve the folder
 with any static file server:
@@ -38,14 +48,12 @@ Figures are current for **FY 2026-27** (income tax) and the **FBT year ending
 | Stamp duty | Per-state schedules for all 8 states/territories, including QLD's hybrid/EV rates and the ACT's emissions-based system, with EV concessions current at July 2026. |
 | Loan | Amortised monthly, on-roads + application fee financed, optional deposit and balloon, monthly account fee. Default 7.50% p.a. (representative secured new-car comparison rate, good credit, July 2026 — RBA cash rate 4.35%). |
 | Lease finance | Default 9.50% p.a. effective (novated rates are quoted opaquely; typical effective range 8–12%), $475 establishment, $30/month management fee — typical of major providers. |
-| Opportunity cost | Optional (on by default): buying outright forfeits interest on the cash, compounded at an editable savings/offset rate (default 4.5%). |
+| Opportunity cost | Optional (on by default): all outflows future-valued at the after-tax investment return (offset/savings/shares presets or custom), applied identically to all three methods. |
 | Depreciation | Industry-average retention curve (editable — you can pin the resale value directly). |
 
 ### Deliberately out of scope
 
-Forgone interest is applied to the upfront lump sum only (monthly repayment and
-package streams are not separately discounted — turn the toggle off to compare pure
-cash totals). Also out of scope: HELP/HECS repayment effects, Medicare levy surcharge, super interactions,
+HELP/HECS repayment effects, Medicare levy surcharge, super interactions,
 the one-third FBT base-value reduction after 4 FBT years (only relevant to leases
 longer than ~5 years), business-use deductions (this is a **private-use** comparison),
 insurance stamp duties, and luxury car tax on the purchase itself (enter the

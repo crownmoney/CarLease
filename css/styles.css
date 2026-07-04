@@ -93,20 +93,36 @@ body {
 .wrap {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 28px 20px 80px;
+  padding: 0 20px 80px;
 }
 
-/* ------------------------------------------------------------ header --- */
+.hero .wrap { padding-bottom: 0; }
 
-header.site {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px 14px;
-  margin-bottom: 6px;
+/* -------------------------------------------------------------- hero --- */
+/* The hero commits to one dark "bottle-green & gold" world in both themes. */
+
+.hero {
+  --hero-ink: #f4f2e8;
+  --hero-ink-2: #c9d4c4;
+  --hero-gold: #eda100;
+  background:
+    radial-gradient(1100px 420px at 82% -10%, rgba(237, 161, 0, 0.14), transparent 60%),
+    linear-gradient(168deg, #0c3d2b 0%, #0a3226 55%, #082a20 100%);
+  color: var(--hero-ink);
+  padding: 44px 0 52px;
 }
 
-header.site h1 { font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+.hero-inner { display: flex; flex-direction: column; gap: 18px; }
+
+.brand-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+
+.brand {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.brand em { font-style: normal; color: var(--hero-gold); }
+.brand .tld { font-weight: 500; color: var(--hero-ink-2); font-size: 14px; }
 
 .fy-badge {
   font-size: 12px;
@@ -118,8 +134,58 @@ header.site h1 { font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -
   padding: 3px 10px;
   white-space: nowrap;
 }
+.hero-badge {
+  color: var(--hero-gold);
+  border-color: rgba(237, 161, 0, 0.45);
+  background: rgba(237, 161, 0, 0.08);
+}
 
-.tagline { color: var(--text-secondary); margin: 0 0 24px; max-width: 74ch; }
+.hero h1 {
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1.12;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 4px 0 0;
+  max-width: 21ch;
+  text-wrap: balance;
+}
+
+.hero-sub {
+  color: var(--hero-ink-2);
+  font-size: 16.5px;
+  line-height: 1.55;
+  max-width: 62ch;
+  margin: 0;
+}
+.hero-sub em { color: var(--hero-ink); font-style: italic; }
+
+.hero-cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin-top: 6px; }
+
+.cta {
+  display: inline-block;
+  background: var(--hero-gold);
+  color: #211500;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 11px 22px;
+  border-radius: 8px;
+}
+.cta:hover { filter: brightness(1.07); }
+.cta:focus-visible { outline: 2px solid var(--hero-ink); outline-offset: 2px; }
+
+.hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  color: var(--hero-ink-2);
+}
+.hero-chips li::before { content: "✓ "; color: var(--hero-gold); font-weight: 700; }
+
+.wrap > .layout { margin-top: 28px; }
 
 /* ------------------------------------------------------------ layout --- */
 
@@ -354,6 +420,16 @@ table.breakdown tbody td:first-child { color: var(--text-secondary); }
 table.breakdown td.credit { color: var(--good-text); }
 table.breakdown td.na { color: var(--text-muted); }
 
+table.breakdown tr.group-row td {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding-top: 14px;
+  border-bottom: 1px solid var(--baseline);
+}
+
 table.breakdown tfoot td {
   font-weight: 700; border-top: 2px solid var(--baseline);
   font-variant-numeric: tabular-nums;
@@ -376,12 +452,87 @@ table.breakdown tfoot td {
   margin: 10px 0;
 }
 
+/* ------------------------------------------------- explainer & FAQ --- */
+
+.section-h {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  margin: 0 0 18px;
+  text-wrap: balance;
+}
+
+.explainer { margin-top: 56px; }
+
+.explain-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+@media (max-width: 700px) { .explain-cards { grid-template-columns: 1fr; } }
+
+.explain-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--series, var(--baseline));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+.explain-card[data-method="outright"] { --series: var(--series-outright); }
+.explain-card[data-method="loan"] { --series: var(--series-loan); }
+.explain-card[data-method="lease"] { --series: var(--series-lease); }
+.explain-card h3 { margin: 0 0 8px; font-size: 16px; }
+.explain-card p { margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.55; }
+
+.faq { margin-top: 56px; max-width: 820px; }
+
+.faq details {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 10px;
+  padding: 0 18px;
+}
+.faq summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 14px 0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::before {
+  content: "+";
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-muted);
+  width: 18px;
+  flex: none;
+  text-align: center;
+  transition: transform 0.15s;
+}
+.faq details[open] summary::before { transform: rotate(45deg); }
+.faq details p { margin: 0 0 16px 28px; color: var(--text-secondary); line-height: 1.6; max-width: 68ch; }
+.faq details p strong { color: var(--text-primary); }
+
 footer.site {
-  margin-top: 34px;
+  margin-top: 56px;
   font-size: 12.5px;
   color: var(--text-muted);
   border-top: 1px solid var(--grid);
-  padding-top: 14px;
+  padding-top: 16px;
+}
+footer.site a { color: var(--accent); }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .faq summary::before, details.advanced summary::before { transition: none; }
 }
 
 .sr-only {
