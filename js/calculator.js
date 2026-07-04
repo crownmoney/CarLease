@@ -105,6 +105,30 @@ export function monthlyRepayment(principal, annualRate, months, balloon = 0) {
   return ((principal - balloon * f) * i) / (1 - f);
 }
 
+/**
+ * Implied annual finance rate of "don't pay cash": you keep `p0` in your
+ * pocket today and instead pay `monthly` for `months` plus `terminal` at the
+ * end. Returns the effective annual IRR of that borrowing — after any tax/GST
+ * effects already baked into the payments — or null if undefined. Comparing
+ * this against your after-tax investment return says whether the financing
+ * beats paying cash.
+ */
+export function impliedFinanceRate(p0, monthly, months, terminal = 0) {
+  if (p0 <= 0 || (monthly <= 0 && terminal <= 0)) return null;
+  const npv = (i) => {
+    const f = Math.pow(1 + i, -months);
+    const annuity = i === 0 ? months : (1 - f) / i;
+    return monthly * annuity + terminal * f - p0;
+  };
+  let lo = -0.06, hi = 0.5; // monthly bounds (≈ −52% … huge, annualised)
+  if (npv(lo) < 0 || npv(hi) > 0) return null; // no sign change in range
+  for (let k = 0; k < 100; k++) {
+    const mid = (lo + hi) / 2;
+    if (npv(mid) > 0) lo = mid; else hi = mid;
+  }
+  return Math.pow(1 + (lo + hi) / 2, 12) - 1;
+}
+
 /** ATO minimum residual value percentage for a lease term in whole years. */
 export function residualPct(termYears, data = AU_DATA) {
   const r = data.lease.residuals[termYears];
@@ -259,6 +283,8 @@ export function buyOutright(inputs, data = AU_DATA) {
 
   return finishResult('Buy outright', upfront, s, resale, rows, t, {
     monthlyOutgoing: run.total / 12,
+    // Cash isn't borrowed — its "rate" is what your own money earns after tax
+    fundingRate: inputs.includeOpportunityCost ? inputs.investRate : 0,
   });
 }
 
@@ -299,11 +325,17 @@ export function carLoan(inputs, data = AU_DATA) {
     resaleRow(resale, inputs),
   ];
 
+  // Vs paying cash: you keep price+duty−deposit today, pay the repayments instead
+  const impliedRate = impliedFinanceRate(
+    inputs.price + duty - deposit, payment + monthlyFee, months, balloon,
+  );
+
   return finishResult('Car loan', deposit, s, resale, rows, t, {
     monthlyOutgoing: payment + monthlyFee + run.total / 12,
     monthlyRepayment: payment,
     interest,
     balloon,
+    impliedRate,
   });
 }
 
@@ -383,8 +415,16 @@ export function novatedLease(inputs, data = AU_DATA) {
     resaleRow(resale, inputs),
   ];
 
+  // Vs paying cash: you keep price+duty today; extra monthly cost over the cash
+  // buyer's running costs (tax & GST savings already inside netMonthly), then
+  // the residual payout. The IRR of that is the lease's after-tax borrowing rate.
+  const impliedRate = impliedFinanceRate(
+    inputs.price + duty, netMonthly - run.total / 12, months, residualWithGst,
+  );
+
   return finishResult('Novated lease', 0, s, resale, rows, t, {
     monthlyOutgoing: netMonthly,
+    impliedRate,
     packageMonthly,
     financePayment,
     residual,

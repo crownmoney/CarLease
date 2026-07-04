@@ -126,12 +126,21 @@ function renderVerdict(cmp, inputs) {
 function renderCards(cmp, inputs) {
   const wrap = $('cards');
   wrap.innerHTML = '';
+  const pct = (v) => `${(v * 100).toFixed(1)}%`;
   cmp.results.forEach((r, i) => {
     const isBest = r === cmp.cheapest;
     const card = document.createElement('article');
     card.className = 'card';
     card.dataset.method = METHOD_META[i].key;
     const facts = [];
+    if (r.fundingRate != null && inputs.includeOpportunityCost) {
+      facts.push(['Your money earns', `${pct(r.fundingRate)} p.a. after tax`]);
+    } else if (r.impliedRate != null) {
+      facts.push([
+        r.packageMonthly != null ? 'Effective rate after tax' : 'Effective finance rate',
+        `${pct(r.impliedRate)} p.a.`,
+      ]);
+    }
     facts.push(['Upfront cash', money(r.upfront)]);
     if (r.monthlyRepayment != null) facts.push(['Loan repayment', `${money(r.monthlyRepayment)}/mo`]);
     if (r.packageMonthly != null) {
@@ -471,6 +480,25 @@ function renderNotes(cmp, inputs) {
 
   $('notes').innerHTML = `
     ${evNote}
+    ${(() => {
+      const loanR = cmp.results[1].impliedRate;
+      const leaseR = cmp.results[2].impliedRate;
+      if (loanR == null || leaseR == null) return '';
+      const bench = inputs.includeOpportunityCost
+        ? `${(inputs.investRate * 100).toFixed(1)}% after tax`
+        : 'nothing (you’ve turned investment returns off)';
+      return `<h3>The effective cost of money, per method</h3>
+      <p>Each financed path is really a loan at some after-tax rate — and it beats paying cash
+        whenever that rate is <em>below</em> what your money earns. Right now your money earns
+        <strong>${bench}</strong>, the car loan effectively borrows at
+        <strong>${(loanR * 100).toFixed(1)}% p.a.</strong> (interest + fees on the amount you avoided
+        handing over), and the novated lease works out at
+        <strong>${(leaseR * 100).toFixed(1)}% p.a.</strong> once its tax and GST savings are counted
+        against its higher rate, fees and residual.${leaseR < 0
+          ? ' A negative rate means the savings outweigh the entire cost of the finance — you’re effectively paid to lease.'
+          : ''}</p>`;
+    })()}
+
     <h3>The three methods, like for like</h3>
     <ul>
       <li><strong>Buy outright</strong> — pay ${money(inputs.price + duty)} up front (price + ${money(duty)}

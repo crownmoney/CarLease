@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { AU_DATA } from '../js/data.js';
 import {
   incomeTax, taxSaved, marginalRateAt, afterTaxReturn, stampDuty, monthlyRepayment,
-  residualPct, annualRunningCosts, resaleValue, settle,
+  residualPct, annualRunningCosts, resaleValue, settle, impliedFinanceRate,
   buyOutright, carLoan, novatedLease, compareAll,
 } from '../js/calculator.js';
 
@@ -102,6 +102,32 @@ test('ATO minimum residuals', () => {
   assert.equal(residualPct(1), 0.6563);
   assert.equal(residualPct(3), 0.4688);
   assert.equal(residualPct(5), 0.2813);
+});
+
+test('impliedFinanceRate recovers a known loan rate', () => {
+  // Borrow $30k at 6% nominal for 60 months, no fees: IRR = effective annual of 6%/12
+  const pmt = monthlyRepayment(30000, 0.06, 60);
+  const r = impliedFinanceRate(30000, pmt, 60);
+  assert.ok(Math.abs(r - (Math.pow(1 + 0.06 / 12, 12) - 1)) < 1e-6);
+  // Repaying less than borrowed → negative implied rate
+  const neg = impliedFinanceRate(30000, 400, 60);
+  assert.ok(neg < 0);
+  assert.equal(impliedFinanceRate(0, 500, 60), null);
+});
+
+test('effective rates: fees push the loan above nominal; tax pulls the lease below it', () => {
+  const cmp = compareAll(baseInputs);
+  const [outright, loan, lease] = cmp.results;
+  assert.equal(outright.fundingRate, baseInputs.investRate);
+  assert.ok(loan.impliedRate > Math.pow(1 + baseInputs.loanRate / 12, 12) - 1, 'fees > nominal');
+  assert.ok(loan.impliedRate < 0.10);
+  assert.ok(lease.impliedRate < loan.impliedRate, 'tax/GST savings beat the rate premium');
+  // Exempt EV: savings exceed the finance cost entirely
+  const ev = novatedLease({
+    ...baseInputs, vehicleType: 'ev', price: 60000, servicePerYear: 400,
+    fuelPerLitre: 0, fuelLPer100km: 0, electricityPerKwh: 0.3, evKwhPer100km: 17,
+  });
+  assert.ok(ev.impliedRate < 0);
 });
 
 /* --------------------------------------------------------------- settle --- */
