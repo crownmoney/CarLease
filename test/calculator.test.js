@@ -6,6 +6,7 @@ import {
   incomeTax, taxSaved, marginalRateAt, afterTaxReturn, stampDuty, monthlyRepayment,
   residualPct, annualRunningCosts, resaleValue, settle, impliedFinanceRate,
   buyOutright, carLoan, novatedLease, compareAll,
+  loanSummary, energyCost, fuelEconomy, emissionsPerYear, breakEven,
 } from '../js/calculator.js';
 
 const baseInputs = {
@@ -287,6 +288,51 @@ test('depreciation curve is decreasing', () => {
   for (let yTerm = 1; yTerm <= 5; yTerm++) {
     const v = resaleValue(50000, yTerm);
     assert.ok(v < prev);
+    prev = v;
+  }
+});
+
+/* ----------------------------------------------------------- mini tools --- */
+
+test('loanSummary: totals reconcile and balance amortises to the balloon', () => {
+  const s = loanSummary({ amount: 40000, annualRate: 0.075, years: 5, appFee: 250, periodFee: 15 });
+  assert.ok(Math.abs(s.totalRepayments - (s.repayment * 60 + s.balloon)) < 1e-6);
+  assert.ok(Math.abs(s.interest - (s.totalRepayments - 40250)) < 1e-6);
+  assert.ok(Math.abs(s.balances.at(-1)) < 0.01, 'no balloon → ends at zero');
+  const b = loanSummary({ amount: 40000, annualRate: 0.075, years: 5, balloonPct: 0.3 });
+  assert.ok(Math.abs(b.balances.at(-1) - 12000) < 1);
+  // Fortnightly repayments cost slightly less interest than monthly
+  const fn = loanSummary({ amount: 40000, annualRate: 0.075, years: 5, perYear: 26 });
+  const mo = loanSummary({ amount: 40000, annualRate: 0.075, years: 5, perYear: 12 });
+  assert.ok(fn.interest < mo.interest);
+});
+
+test('energyCost and fuelEconomy arithmetic', () => {
+  const c = energyCost({ kmPerYear: 13000, per100km: 7.5, unitPrice: 1.8 });
+  assert.ok(Math.abs(c.perYear - 1755) < 1e-9);
+  assert.ok(Math.abs(c.perKm - 1755 / 13000) < 1e-12);
+  const e = fuelEconomy({ km: 500, litres: 40 });
+  assert.ok(Math.abs(e.lPer100km - 8) < 1e-9);
+  assert.ok(Math.abs(e.kmPerL - 12.5) < 1e-9);
+  assert.ok(Math.abs(e.mpgUS - 235.215 / 8) < 1e-6);
+  assert.equal(fuelEconomy({ km: 0, litres: 40 }), null);
+});
+
+test('emissions: petrol vs EV, and breakEven basics', () => {
+  const petrol = emissionsPerYear({ fuelType: 'petrol', per100km: 7.5, kmPerYear: 13000 });
+  assert.ok(Math.abs(petrol - 13000 / 100 * 7.5 * 2.31) < 1e-9);
+  const ev = emissionsPerYear({ fuelType: 'ev', per100km: 17, kmPerYear: 13000 });
+  assert.ok(ev < petrol);
+  assert.ok(Math.abs(breakEven({ extraUpfront: 15000, annualSaving: 1500 }) - 10) < 1e-9);
+  assert.equal(breakEven({ extraUpfront: 15000, annualSaving: -50 }), null);
+  assert.equal(breakEven({ extraUpfront: -2000, annualSaving: 500 }), 0);
+});
+
+test('depreciation curve extends to 10 years, still decreasing', () => {
+  let prev = Infinity;
+  for (let y = 1; y <= 10; y++) {
+    const v = resaleValue(50000, y);
+    assert.ok(v < prev, `year ${y}`);
     prev = v;
   }
 });

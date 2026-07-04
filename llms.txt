@@ -6,6 +6,18 @@
 > FBT, GST, the EV exemption and state-by-state stamp duty. Every assumption is
 > editable and every figure is sourced.
 
+## Calculators on the page (tabs; deep-linkable by URL hash)
+
+1. Buy vs loan vs lease comparison (#calculator) — the flagship tool
+2. Car loan repayments (#loan) — repayment, interest, balance by year
+3. Novated lease estimate (#novated) — package, tax saved, ECM, residual
+4. Stamp duty & rego (#duty) — your state plus all 8 side by side
+5. Fuel & charging cost (#fuel)
+6. Depreciation (#depreciation) — average curve or custom %, 1-10 years
+7. Fuel economy (#economy) — L/100km, km/L, MPG conversions
+8. CO2 emissions (#emissions) — petrol/diesel/hybrid/EV incl. grid factor
+9. EV vs petrol break-even (#breakeven)
+
 ## What it answers
 
 - "Is a novated lease cheaper than a car loan or paying cash in Australia?"

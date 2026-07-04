@@ -129,6 +129,68 @@ export function impliedFinanceRate(p0, monthly, months, terminal = 0) {
   return Math.pow(1 + (lo + hi) / 2, 12) - 1;
 }
 
+/** Repayment per period for any frequency (weekly/fortnightly/monthly). */
+export function periodicRepayment(principal, annualRate, perYear, periods, balloon = 0) {
+  const i = annualRate / perYear;
+  if (i === 0) return (principal - balloon) / periods;
+  const f = Math.pow(1 + i, -periods);
+  return ((principal - balloon * f) * i) / (1 - f);
+}
+
+/** Standalone loan summary: repayment, totals, and a yearly balance curve. */
+export function loanSummary({ amount, annualRate, years, balloonPct = 0, perYear = 12, appFee = 0, periodFee = 0 }) {
+  const periods = Math.round(years * perYear);
+  const financed = amount + appFee;
+  const balloon = amount * balloonPct;
+  const repayment = periodicRepayment(financed, annualRate, perYear, periods, balloon);
+  const totalRepayments = repayment * periods + balloon;
+  const interest = totalRepayments - financed;
+  const fees = appFee + periodFee * periods;
+  const i = annualRate / perYear;
+  const balances = [financed];
+  let bal = financed;
+  for (let p = 1; p <= periods; p++) {
+    bal = bal * (1 + i) - repayment;
+    if (p % perYear === 0 || p === periods) balances.push(Math.max(bal, 0));
+  }
+  return { repayment, periods, totalRepayments, interest, fees, balloon, balances,
+    totalCost: totalRepayments + periodFee * periods };
+}
+
+/** Annual energy cost for any drivetrain (litres or kWh per 100 km). */
+export function energyCost({ kmPerYear, per100km, unitPrice }) {
+  const perYear = (kmPerYear / 100) * per100km * unitPrice;
+  return { perYear, perMonth: perYear / 12, perWeek: perYear / 52, perKm: perYear / kmPerYear };
+}
+
+/** Trip-based fuel economy with unit conversions. */
+export function fuelEconomy({ km, litres }) {
+  if (km <= 0 || litres <= 0) return null;
+  const lPer100km = (litres / km) * 100;
+  return {
+    lPer100km,
+    kmPerL: km / litres,
+    mpgUS: 235.215 / lPer100km,
+    mpgImp: 282.481 / lPer100km,
+  };
+}
+
+/** Tailpipe / grid CO2-e per year, kg. */
+export function emissionsPerYear({ fuelType, per100km, kmPerYear }, data = AU_DATA) {
+  const factor = data.emissions.factors[fuelType];
+  if (factor == null) throw new Error(`No emissions factor for ${fuelType}`);
+  return (kmPerYear / 100) * per100km * factor;
+}
+
+/**
+ * Break-even: how long until a dearer-to-buy, cheaper-to-run car pays for
+ * itself. Returns years, or null when it never does.
+ */
+export function breakEven({ extraUpfront, annualSaving }) {
+  if (annualSaving <= 0) return extraUpfront <= 0 ? 0 : null;
+  return Math.max(0, extraUpfront) / annualSaving;
+}
+
 /** ATO minimum residual value percentage for a lease term in whole years. */
 export function residualPct(termYears, data = AU_DATA) {
   const r = data.lease.residuals[termYears];

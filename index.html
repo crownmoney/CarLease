@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
-  <title>Car Calculator — novated lease vs car loan vs cash, compared properly | Presented by Crown Money</title>
-  <meta name="description" content="Free Australian calculator by Crown Money that shows whether a novated lease, a car loan or paying cash is really cheaper — with FY 2026-27 income tax, FBT, the EV exemption, GST and your state's stamp duty built in, plus what your money would have earned invested." />
+  <title>Car Calculator — Australia's car cost calculators: lease vs loan vs cash, stamp duty, fuel, depreciation &amp; more | Crown Money</title>
+  <meta name="description" content="Free Australian car calculators by Crown Money: compare a novated lease vs car loan vs paying cash with FY 2026-27 tax and FBT, plus car loan repayments, stamp duty & rego for every state, fuel costs, depreciation, fuel economy, CO2 emissions and EV break-even." />
   <link rel="canonical" href="https://carcalculator.com.au/" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Car Calculator — lease vs loan vs cash, compared properly" />
@@ -35,8 +35,19 @@
         "applicationCategory": "FinanceApplication",
         "operatingSystem": "Any",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "AUD" },
-        "description": "Compare the true cost of owning a car in Australia three ways: buying outright, a secured car loan, or a novated lease.",
-        "publisher": { "@type": "Organization", "name": "Crown Money", "url": "https://www.crown.money/" }
+        "description": "Australia's one-stop car calculators: buy vs loan vs novated lease comparison, car loan repayments, stamp duty and rego by state, fuel cost, depreciation, fuel economy, CO2 emissions and EV break-even.",
+        "publisher": { "@type": "Organization", "name": "Crown Money", "url": "https://crownmoney.com.au/" },
+        "featureList": [
+          "Buy vs car loan vs novated lease comparison (FY 2026-27 tax, FBT, GST)",
+          "Car loan repayment calculator",
+          "Novated lease calculator",
+          "Fuel & charging cost calculator",
+          "Stamp duty & rego calculator for all Australian states",
+          "Car depreciation calculator",
+          "Fuel economy calculator",
+          "Car CO2 emissions calculator",
+          "EV vs petrol break-even calculator"
+        ]
       },
       {
         "@type": "FAQPage",
@@ -75,26 +86,41 @@
     </div>
     <h1>Novated lease, car loan, or&nbsp;cash — which really costs&nbsp;less?</h1>
     <p class="hero-sub">
-      The honest three-way comparison for Australia. Same car, same years, same end point —
-      you own it — with income tax, FBT, the EV exemption, GST and your state's stamp duty
-      done properly, and what your money would have earned <em>invested</em> counted for
-      every method, not just cash.
+      The honest three-way comparison for Australia — same car, same years, income tax, FBT,
+      GST and your state's stamp duty done properly, with what your money would have earned
+      <em>invested</em> counted for every method. Plus eight more calculators: loan repayments,
+      stamp duty &amp; rego, fuel, depreciation, emissions and EV break-even — one page for
+      every car number.
     </p>
     <div class="hero-cta-row">
       <a class="cta" href="#calculator">Run your numbers</a>
       <ul class="hero-chips" aria-label="What's included">
+        <li>9 free calculators</li>
         <li>FY 2026-27 tax &amp; FBT</li>
         <li>All 8 states &amp; territories</li>
-        <li>EV exemption built in</li>
-        <li>Free — no sign-up</li>
+        <li>No sign-up</li>
       </ul>
     </div>
   </div>
 </header>
 
 <div class="wrap">
+  <!-- ========================================================== tabs -->
+  <nav class="tabs" id="calculator" role="tablist" aria-label="Car calculators">
+    <button role="tab" aria-selected="true" data-tab="compare">Buy vs loan vs lease</button>
+    <button role="tab" aria-selected="false" data-tab="loan">Car loan</button>
+    <button role="tab" aria-selected="false" data-tab="novated">Novated lease</button>
+    <button role="tab" aria-selected="false" data-tab="duty">Stamp duty &amp; rego</button>
+    <button role="tab" aria-selected="false" data-tab="fuel">Fuel cost</button>
+    <button role="tab" aria-selected="false" data-tab="depreciation">Depreciation</button>
+    <button role="tab" aria-selected="false" data-tab="economy">Fuel economy</button>
+    <button role="tab" aria-selected="false" data-tab="emissions">Emissions</button>
+    <button role="tab" aria-selected="false" data-tab="breakeven">EV break-even</button>
+  </nav>
+
   <!-- ====================================================== calculator -->
-  <div class="layout" id="calculator">
+  <section class="tab-panel" id="tab-compare" role="tabpanel">
+  <div class="layout">
     <form class="panel" id="inputs" autocomplete="off">
       <h2>Your details</h2>
 
@@ -300,6 +326,237 @@
       </div>
     </main>
   </div>
+  </section>
+
+  <!-- ======================================================= car loan -->
+  <section class="tab-panel" id="tab-loan" role="tabpanel" hidden>
+    <div class="layout-mini">
+      <form class="panel" autocomplete="off">
+        <h2>Car loan</h2>
+        <div class="field"><label for="ln-amount">Loan amount <span class="hint">$</span></label>
+          <input type="number" id="ln-amount" min="1000" step="500" value="40000" /></div>
+        <div class="field-row">
+          <div class="field"><label for="ln-rate">Interest rate <span class="hint">% p.a.</span></label>
+            <input type="number" id="ln-rate" min="0" max="30" step="0.05" value="7.5" /></div>
+          <div class="field"><label for="ln-years">Term <span class="hint">years</span></label>
+            <input type="number" id="ln-years" min="1" max="10" step="1" value="5" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="ln-freq">Repayments</label>
+            <select id="ln-freq">
+              <option value="12" selected>Monthly</option>
+              <option value="26">Fortnightly</option>
+              <option value="52">Weekly</option>
+            </select></div>
+          <div class="field"><label for="ln-balloon">Balloon <span class="hint">% of amount</span></label>
+            <input type="number" id="ln-balloon" min="0" max="50" step="5" value="0" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="ln-appfee">Application fee <span class="hint">$</span></label>
+            <input type="number" id="ln-appfee" min="0" step="10" value="250" /></div>
+          <div class="field"><label for="ln-monthfee">Account fee <span class="hint">$/month</span></label>
+            <input type="number" id="ln-monthfee" min="0" step="1" value="15" /></div>
+        </div>
+      </form>
+      <div class="panel"><div id="ln-results"></div></div>
+    </div>
+  </section>
+
+  <!-- =================================================== novated lease -->
+  <section class="tab-panel" id="tab-novated" role="tabpanel" hidden>
+    <div class="layout-mini">
+      <form class="panel" autocomplete="off">
+        <h2>Novated lease estimate</h2>
+        <div class="field"><label for="nv-price">Vehicle price <span class="hint">(incl. GST)</span></label>
+          <input type="number" id="nv-price" min="5000" step="500" value="50000" /></div>
+        <div class="field-row">
+          <div class="field"><label for="nv-type">Vehicle type</label>
+            <select id="nv-type">
+              <option value="petrol" selected>Petrol</option>
+              <option value="hybrid">Hybrid</option>
+              <option value="ev">EV</option>
+            </select></div>
+          <div class="field"><label for="nv-state">State</label><select id="nv-state"></select></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="nv-term">Term</label>
+            <select id="nv-term">
+              <option value="1">1 year</option><option value="2">2 years</option>
+              <option value="3">3 years</option><option value="4">4 years</option>
+              <option value="5" selected>5 years</option>
+            </select></div>
+          <div class="field"><label for="nv-salary">Salary <span class="hint">$/yr</span></label>
+            <input type="number" id="nv-salary" min="0" step="1000" value="100000" /></div>
+        </div>
+        <div class="field"><label for="nv-km">Distance <span class="hint">km/yr</span></label>
+          <input type="number" id="nv-km" min="1000" step="500" value="13000" /></div>
+        <p class="hint" style="margin:6px 0 0">Uses typical running costs and a 9.5% effective lease
+          rate — the <a href="#" data-goto="compare">full comparison tab</a> lets you edit everything.</p>
+      </form>
+      <div class="panel"><div id="nv-results"></div></div>
+    </div>
+  </section>
+
+  <!-- =============================================== stamp duty & rego -->
+  <section class="tab-panel" id="tab-duty" role="tabpanel" hidden>
+    <div class="layout-mini">
+      <form class="panel" autocomplete="off">
+        <h2>Stamp duty &amp; rego</h2>
+        <div class="field"><label for="sd-price">Vehicle price <span class="hint">$ (dutiable value)</span></label>
+          <input type="number" id="sd-price" min="1000" step="500" value="50000" /></div>
+        <div class="field-row">
+          <div class="field"><label for="sd-type">Vehicle type</label>
+            <select id="sd-type">
+              <option value="petrol" selected>Petrol / diesel</option>
+              <option value="hybrid">Hybrid</option>
+              <option value="ev">EV</option>
+            </select></div>
+          <div class="field"><label for="sd-state">Your state</label><select id="sd-state"></select></div>
+        </div>
+      </form>
+      <div class="panel"><div id="sd-results"></div></div>
+    </div>
+  </section>
+
+  <!-- ======================================================= fuel cost -->
+  <section class="tab-panel" id="tab-fuel" role="tabpanel" hidden>
+    <div class="layout-mini">
+      <form class="panel" autocomplete="off">
+        <h2>Fuel &amp; charging cost</h2>
+        <div class="field"><label for="fu-type">Vehicle type</label>
+          <select id="fu-type">
+            <option value="petrol" selected>Petrol</option>
+            <option value="diesel">Diesel</option>
+            <option value="ev">EV</option>
+          </select></div>
+        <div class="field"><label for="fu-km">Distance <span class="hint">km/yr</span></label>
+          <input type="number" id="fu-km" min="500" step="500" value="13000" /></div>
+        <div class="field-row">
+          <div class="field"><label for="fu-cons" id="fu-cons-label">Consumption <span class="hint">L/100 km</span></label>
+            <input type="number" id="fu-cons" min="0" step="0.1" value="7.5" /></div>
+          <div class="field"><label for="fu-price" id="fu-price-label">Fuel price <span class="hint">$/L</span></label>
+            <input type="number" id="fu-price" min="0" step="0.01" value="1.80" /></div>
+        </div>
+      </form>
+      <div class="panel"><div id="fu-results"></div></div>
+    </div>
+  </section>
+
+  <!-- ==================================================== depreciation -->
+  <section class="tab-panel" id="tab-depreciation" role="tabpanel" hidden>
+    <div class="layout-mini">
+      <form class="panel" autocomplete="off">
+        <h2>Depreciation</h2>
+        <div class="field"><label for="dp-price">Purchase price <span class="hint">$</span></label>
+          <input type="number" id="dp-price" min="1000" step="500" value="50000" /></div>
+        <div class="field-row">
+          <div class="field"><label for="dp-years">Years of ownership</label>
+            <select id="dp-years"></select></div>
+          <div class="field"><label for="dp-mode">Curve</label>
+            <select id="dp-mode">
+              <option value="average" selected>Average new car</option>
+              <option value="custom">Custom % per year</option>
+            </select></div>
+        </div>
+        <div class="field" id="dp-custom-wrap" style="display:none">
+          <label for="dp-custom">Annual depreciation <span class="hint">% of remaining value</span></label>
+          <input type="number" id="dp-custom" min="0" max="50" step="0.5" value="14" />
+        </div>
+        <p class="hint" style="margin:6px 0 0">Strong-resale models (RAV4, Jimny…) hold far more;
+          the trade-in value a dealer offers is typically a little under these private-sale figures.</p>
+      </form>
+      <div class="panel"><div id="dp-results"></div></div>
+    </div>
+  </section>
+
+  <!-- ==================================================== fuel economy -->
+  <section class="tab-panel" id="tab-economy" role="tabpanel" hidden>
+    <div class="layout-mini">
+      <form class="panel" autocomplete="off">
+        <h2>Fuel economy</h2>
+        <p class="hint" style="margin:0 0 12px">Fill up, note the litres and the kms since your last
+          fill, and get your real-world consumption.</p>
+        <div class="field-row">
+          <div class="field"><label for="fe-km">Distance travelled <span class="hint">km</span></label>
+            <input type="number" id="fe-km" min="1" step="1" value="520" /></div>
+          <div class="field"><label for="fe-litres">Fuel used <span class="hint">litres</span></label>
+            <input type="number" id="fe-litres" min="0.1" step="0.1" value="38" /></div>
+        </div>
+        <div class="field"><label for="fe-price">Fuel price <span class="hint">$/L (optional, for cost)</span></label>
+          <input type="number" id="fe-price" min="0" step="0.01" value="1.80" /></div>
+      </form>
+      <div class="panel"><div id="fe-results"></div></div>
+    </div>
+  </section>
+
+  <!-- ======================================================= emissions -->
+  <section class="tab-panel" id="tab-emissions" role="tabpanel" hidden>
+    <div class="layout-mini">
+      <form class="panel" autocomplete="off">
+        <h2>CO₂ emissions</h2>
+        <div class="field"><label for="em-type">Vehicle type</label>
+          <select id="em-type">
+            <option value="petrol" selected>Petrol</option>
+            <option value="diesel">Diesel</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="ev">EV (grid charged)</option>
+          </select></div>
+        <div class="field-row">
+          <div class="field"><label for="em-cons" id="em-cons-label">Consumption <span class="hint">L/100 km</span></label>
+            <input type="number" id="em-cons" min="0" step="0.1" value="7.5" /></div>
+          <div class="field"><label for="em-km">Distance <span class="hint">km/yr</span></label>
+            <input type="number" id="em-km" min="500" step="500" value="13000" /></div>
+        </div>
+      </form>
+      <div class="panel"><div id="em-results"></div></div>
+    </div>
+  </section>
+
+  <!-- ====================================================== break-even -->
+  <section class="tab-panel" id="tab-breakeven" role="tabpanel" hidden>
+    <div class="layout-mini">
+      <form class="panel" autocomplete="off">
+        <h2>EV vs petrol break-even</h2>
+        <div class="field"><label for="be-km">Distance <span class="hint">km/yr</span></label>
+          <input type="number" id="be-km" min="1000" step="500" value="13000" /></div>
+        <p class="subhead">Petrol car</p>
+        <div class="field-row">
+          <div class="field"><label for="be-a-price">Price <span class="hint">$</span></label>
+            <input type="number" id="be-a-price" min="1000" step="500" value="40000" /></div>
+          <div class="field"><label for="be-a-cons">L/100 km</label>
+            <input type="number" id="be-a-cons" min="0" step="0.1" value="7.5" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="be-a-fuel">Fuel <span class="hint">$/L</span></label>
+            <input type="number" id="be-a-fuel" min="0" step="0.01" value="1.80" /></div>
+          <div class="field"><label for="be-a-service">Servicing <span class="hint">$/yr</span></label>
+            <input type="number" id="be-a-service" min="0" step="50" value="600" /></div>
+        </div>
+        <p class="subhead">Electric car</p>
+        <div class="field-row">
+          <div class="field"><label for="be-b-price">Price <span class="hint">$</span></label>
+            <input type="number" id="be-b-price" min="1000" step="500" value="55000" /></div>
+          <div class="field"><label for="be-b-cons">kWh/100 km</label>
+            <input type="number" id="be-b-cons" min="0" step="0.5" value="17" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="be-b-power">Electricity <span class="hint">$/kWh</span></label>
+            <input type="number" id="be-b-power" min="0" step="0.01" value="0.30" /></div>
+          <div class="field"><label for="be-b-service">Servicing <span class="hint">$/yr</span></label>
+            <input type="number" id="be-b-service" min="0" step="50" value="400" /></div>
+        </div>
+      </form>
+      <div class="panel"><div id="be-results"></div></div>
+    </div>
+  </section>
+
+  <!-- ========================================================== banner -->
+  <aside class="ad-banner">
+    <a href="https://crownmoney.com.au" target="_blank" rel="noopener">
+      <img src="assets/crown-ad.jpg" width="1456" height="720" loading="lazy"
+        alt="Crown Money — live mortgage free and financially secure. Own your home faster and pay less interest. Start now." />
+    </a>
+  </aside>
 
   <!-- ======================================================= explainer -->
   <section class="explainer" aria-labelledby="explainerH">
@@ -395,7 +652,7 @@
 
   <footer class="site">
     <div class="footer-brand">
-      <a href="https://www.crown.money/" rel="noopener" aria-label="Crown Money">
+      <a href="https://crownmoney.com.au" rel="noopener" aria-label="Crown Money">
         <img class="crown-logo-dark" src="assets/header-logo.svg" alt="Crown Money" width="333" height="145" />
         <img class="crown-logo-light" src="assets/crown-light.png" alt="Crown Money" width="400" height="185" />
       </a>
@@ -413,5 +670,6 @@
 <div class="viz-tooltip" id="tooltip" role="status"></div>
 
 <script type="module" src="js/app.js"></script>
+<script type="module" src="js/tools.js"></script>
 </body>
 </html>

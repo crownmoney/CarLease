@@ -2,12 +2,18 @@
 
 Presented by [Crown Money](https://www.crown.money/) — brand colours `#250B40` / `#E6DEEE` / white.
 
-A single-page website + calculator that compares the **true cost of owning the same
-car** three ways in Australia:
+A one-stop, single-page car-calculator hub for Australia. The flagship tool compares
+the **true cost of owning the same car** three ways:
 
 1. **Buy outright** — cash,
 2. **Car loan** — secured new-car finance with on-roads financed,
 3. **Novated lease** — fully-maintained, salary-packaged through your employer.
+
+Eight more tabbed calculators share the same engine and data: **car loan repayments**,
+**novated lease estimate**, **stamp duty & rego** (all 8 states side by side),
+**fuel & charging cost**, **depreciation** (1-10 years), **fuel economy**,
+**CO₂ emissions**, and **EV vs petrol break-even**. Tabs deep-link via URL hash
+(`/#duty`, `/#loan`, …).
 
 All three paths end with you owning the car, and the same estimated resale value is
 credited back — so the difference between the columns is purely what each path costs.
@@ -73,10 +79,12 @@ drive-away price of the car you were actually quoted).
 ## Project layout
 
 ```
-index.html            page shell & inputs
+index.html            page shell, tabs & inputs
 css/styles.css        design tokens (light/dark), layout, chart chrome
 js/data.js            ★ all Australian figures, with sources — update yearly
 js/calculator.js      pure calculation engine (importable in Node)
-js/app.js             UI wiring, SVG charts, methodology notes
+js/app.js             comparison tab: UI wiring, SVG charts, methodology notes
+js/tools.js           the eight mini-calculator tabs + tab routing
+assets/               Crown Money logos, favicon, og-image, banner
 test/calculator.test.js
 ```

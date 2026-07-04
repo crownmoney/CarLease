@@ -77,7 +77,20 @@ export const AU_DATA = {
      at 3 years, ~40-45% at 5 (Canstar / savings.com.au industry averages).
      Editable in the UI — strong-resale models (RAV4, Jimny) hold far more. */
   depreciation: {
-    retainedByYear: { 1: 0.78, 2: 0.67, 3: 0.58, 4: 0.50, 5: 0.43 },
+    // Years 6-10 extrapolate the flattening tail (~9%/yr of remaining value)
+    retainedByYear: {
+      1: 0.78, 2: 0.67, 3: 0.58, 4: 0.50, 5: 0.43,
+      6: 0.39, 7: 0.355, 8: 0.32, 9: 0.29, 10: 0.265,
+    },
+  },
+
+  /* CO2-e per unit of energy: petrol/diesel tailpipe factors (kg per litre,
+     full-cycle incl. upstream ≈ NGA factors); EV uses the national grid
+     average (kg per kWh, declining yearly — GreenPower/home solar → ~0).
+     https://www.dcceew.gov.au/climate-change/publications/national-greenhouse-accounts-factors */
+  emissions: {
+    factors: { petrol: 2.31, diesel: 2.66, hybrid: 2.31, ev: 0.60 },
+    treeKgPerYear: 22, // one mature tree absorbs ~22 kg CO2 a year
   },
 
   /* Editable running-cost defaults. energyPrice is $/L (ICE) or $/kWh (EV);
