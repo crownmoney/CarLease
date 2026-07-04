@@ -75,6 +75,7 @@ function readInputs() {
     termYears: parseInt($('term').value, 10),
     salary,
     kmPerYear: num('km', 13000),
+    sellAtEnd: $('sellAtEnd').checked,
     includeOpportunityCost: $('oppCost').checked,
     investPreset,
     investGross,
@@ -105,12 +106,15 @@ function renderVerdict(cmp, inputs) {
   const [best, second] = cmp.ranked;
   const diff = second.netCost - best.netCost;
   const t = inputs.termYears;
+  const keepNote = inputs.sellAtEnd
+    ? 'after selling the car at the end'
+    : `and you still own the car, worth about ${money(best.resale)}`;
   $('verdict').innerHTML = `
     <p class="lead-in">Cheapest way to own this car</p>
     <p class="headline">${best.label} — <span class="amount">${money(best.netCost)}</span>
       over ${t} year${t > 1 ? 's' : ''}</p>
     <p class="sub">That's ${money(diff)} less than the next-best option (${second.label.toLowerCase()}),
-      or about ${money(best.netCost / (t * 12))}/month once the car is sold at the end.
+      about ${money(best.netCost / (t * 12))}/month — ${keepNote}.
       ${inputs.includeOpportunityCost
         ? `Costs are in end-of-term dollars — money not yet spent keeps earning
            ${(inputs.investRate * 100).toFixed(1)}% p.a. after tax for every method.`
@@ -139,13 +143,16 @@ function renderCards(cmp, inputs) {
     if (r.balloon > 0) facts.push(['Balloon at end', money(r.balloon)]);
     if (r.residualWithGst != null) facts.push(['Residual at end (incl. GST)', money(r.residualWithGst)]);
     if (inputs.includeOpportunityCost) facts.push(['Forgone earnings', money(r.opportunity)]);
+    if (!inputs.sellAtEnd) facts.push(['Car still worth', money(r.resale)]);
     facts.push(['Cost per week', money(r.perWeek)]);
 
     card.innerHTML = `
       <h3 class="name">${r.label}
         ${isBest ? '<span class="cheapest-chip">✓ Cheapest</span>' : ''}</h3>
       <p class="net">${money(r.netCost)}</p>
-      <p class="net-label">net cost over ${inputs.termYears} yrs (after resale)</p>
+      <p class="net-label">${inputs.sellAtEnd
+        ? `net cost over ${inputs.termYears} yrs (after selling the car)`
+        : `cost over ${inputs.termYears} yrs (you keep the car)`}</p>
       <dl>${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
     wrap.appendChild(card);
   });
@@ -154,19 +161,32 @@ function renderCards(cmp, inputs) {
 /* ----------------------------------------------------------- bar chart --- */
 
 function renderBarChart(cmp, inputs) {
-  $('barChartSub').textContent =
-    `Total cost over ${inputs.termYears} years after selling the car — lower is better.`;
-  const W = 720, ROW = 44, PADL = 118, PADR = 96;
+  $('barChartSub').textContent = inputs.sellAtEnd
+    ? `Total cost over ${inputs.termYears} years after selling the car — lower is better.`
+    : `Total cost over ${inputs.termYears} years, keeping the car (worth about ` +
+      `${money(cmp.results[0].resale)} at the end) — lower is better.`;
+  // Compact layout on narrow screens: labels above the bars so text stays legible
+  const cw = $('barChart').clientWidth || 720;
+  const narrow = cw < 520;
+  const W = narrow ? 400 : 720;
+  const ROW = narrow ? 58 : 44;
+  const PADL = narrow ? 0 : 118;
+  const PADR = narrow ? 86 : 96;
   const H = ROW * 3 + 8;
   const max = Math.max(...cmp.results.map((r) => r.netCost), 1);
   const x = (v) => PADL + (Math.max(0, v) / max) * (W - PADL - PADR);
 
   let bars = '';
   cmp.results.forEach((r, i) => {
-    const y = 8 + i * ROW;
+    const y = narrow ? 24 + i * ROW : 8 + i * ROW;
     const bh = 22;
     const w = Math.max(2, x(r.netCost) - PADL);
     const c = seriesColor(i);
+    const nameLabel = narrow
+      ? `<text x="0" y="${y - 7}" font-size="13" font-weight="600"
+           fill="var(--text-secondary)">${r.label}</text>`
+      : `<text x="${PADL - 10}" y="${y + bh / 2 + 4}" text-anchor="end"
+           font-size="13" font-weight="600" fill="var(--text-secondary)">${r.label}</text>`;
     // 4px rounded data-end, square at the baseline
     bars += `
       <g class="bar-g" data-i="${i}" tabindex="0" role="img"
@@ -174,11 +194,11 @@ function renderBarChart(cmp, inputs) {
         <rect x="${PADL}" y="${y}" width="${w}" height="${bh}" fill="${c}"
               rx="4" ry="4" />
         <rect x="${PADL}" y="${y}" width="${Math.min(6, w / 2)}" height="${bh}" fill="${c}" />
-        <text x="${PADL - 10}" y="${y + bh / 2 + 4}" text-anchor="end"
-              font-size="13" font-weight="600" fill="var(--text-secondary)">${r.label}</text>
+        ${nameLabel}
         <text x="${PADL + w + 8}" y="${y + bh / 2 + 4}" font-size="13" font-weight="700"
               fill="var(--text-primary)" font-variant="tabular-nums">${money(r.netCost)}</text>
-        <rect x="0" y="${y - 4}" width="${W}" height="${bh + 8}" fill="transparent" class="bar-hit" />
+        <rect x="0" y="${y - (narrow ? 20 : 4)}" width="${W}" height="${bh + (narrow ? 24 : 8)}"
+              fill="transparent" class="bar-hit" />
       </g>`;
   });
 
@@ -197,7 +217,8 @@ function renderBarChart(cmp, inputs) {
       <div class="tt-row"><span class="k"><span class="swatch" style="background:${c}"></span>Net cost</span>
         <span class="v">${money(r.netCost)}</span></div>
       <div class="tt-row"><span class="k">Total outgoings</span><span class="v">${money(r.totalOutgoings)}</span></div>
-      <div class="tt-row"><span class="k">Resale recovered</span><span class="v">−${money(r.resale)}</span></div>
+      <div class="tt-row"><span class="k">${inputs.sellAtEnd ? 'Sale recovered' : 'Car still worth'}</span>
+        <span class="v">${inputs.sellAtEnd ? '−' : ''}${money(r.resale)}</span></div>
       <div class="tt-row"><span class="k">Per week</span><span class="v">${money(r.perWeek)}</span></div>`);
   });
 }
@@ -206,9 +227,12 @@ function renderBarChart(cmp, inputs) {
 
 function renderLineChart(cmp, inputs) {
   const t = inputs.termYears;
+  const endPhrase = inputs.sellAtEnd
+    ? 'the residual/balloon paid and the car sold at the end of the final year'
+    : 'the residual/balloon paid at the end of the final year (car kept)';
   $('lineChartSub').textContent = inputs.includeOpportunityCost
-    ? 'Money out the door plus forgone investment earnings to date, with the residual/balloon paid and the car sold at the end of the final year.'
-    : 'Money out the door each year, with the residual/balloon paid and the car sold at the end of the final year.';
+    ? `Money out the door plus forgone investment earnings to date, with ${endPhrase}.`
+    : `Money out the door each year, with ${endPhrase}.`;
   // Series: year 0 (drive-away outlay) through year t (residual paid, car sold)
   const shortNames = ['Outright', 'Loan', 'Lease'];
   const series = cmp.results.map((r, i) => ({
@@ -218,7 +242,15 @@ function renderLineChart(cmp, inputs) {
     points: [i === 2 ? 0 : r.upfront, ...r.timeline],
   }));
 
-  const W = 720, H = 300, PADL = 64, PADR = 148, PADT = 14, PADB = 32;
+  // Compact layout on narrow screens: no end labels (legend + tooltip carry
+  // identity) so the plot area stays big enough to read
+  const cw = $('lineChart').clientWidth || 720;
+  const narrow = cw < 520;
+  const W = narrow ? 420 : 720;
+  const H = narrow ? 260 : 300;
+  const PADL = narrow ? 52 : 64;
+  const PADR = narrow ? 14 : 148;
+  const PADT = 14, PADB = 32;
   const allVals = series.flatMap((s) => s.points);
   const maxV = Math.max(...allVals, 1);
   const minV = Math.min(...allVals, 0);
@@ -250,6 +282,7 @@ function renderLineChart(cmp, inputs) {
   });
 
   // End dots (surface ring) + collision-resolved direct end labels
+  // (labels only in wide layout — compact relies on the legend + tooltip)
   const ends = series
     .map((s, i) => ({ i, s, yPos: y(s.points[t]) }))
     .sort((a, b) => a.yPos - b.yPos);
@@ -261,7 +294,9 @@ function renderLineChart(cmp, inputs) {
     const cy = y(s.points[t]);
     endMarks += `
       <circle cx="${x(t)}" cy="${cy}" r="4" fill="${s.color}"
-              stroke="var(--surface-1)" stroke-width="2" />
+              stroke="var(--surface-1)" stroke-width="2" />`;
+    if (!narrow) {
+      endMarks += `
       ${Math.abs(yPos - cy) > 7
         ? `<line x1="${x(t) + 6}" y1="${cy}" x2="${x(t) + 16}" y2="${yPos}"
              stroke="var(--baseline)" stroke-width="1" />` : ''}
@@ -269,6 +304,7 @@ function renderLineChart(cmp, inputs) {
         <tspan font-weight="700" font-variant="tabular-nums">${money(s.points[t])}</tspan>
         <tspan fill="var(--text-secondary)" font-size="11"> ${s.short}</tspan>
       </text>`;
+    }
   });
 
   $('lineLegend').innerHTML = series
@@ -351,7 +387,7 @@ function bindTooltip(el, htmlFn) {
 
 const GROUP_ORDER = ['Buying the car', 'Financing', 'Running costs', 'Tax & investment', 'End of term'];
 
-function renderBreakdown(cmp) {
+function renderBreakdown(cmp, inputs) {
   // Per group, union of row labels across methods in first-seen order
   const infoLabels = new Set();
   const byMethod = cmp.results.map((r) => {
@@ -400,7 +436,8 @@ function renderBreakdown(cmp) {
          † shown for information — this saving is already built into the rows above, so it isn't added again.
          Lease running costs are the ex-GST amounts you actually pay through the package.</td></tr>`
     : '';
-  const foot = `<tfoot><tr><td>Net cost of ownership</td>${cmp.results
+  const totalLabel = inputs.sellAtEnd ? 'Net cost of ownership' : 'Total cost of ownership (car kept)';
+  const foot = `<tfoot><tr><td>${totalLabel}</td>${cmp.results
     .map((r) => `<td>${money(r.netCost)}</td>`).join('')}</tr>${footnote}</tfoot>`;
 
   $('breakdown').innerHTML = head + `<tbody>${body}</tbody>` + foot;
@@ -447,8 +484,11 @@ function renderNotes(cmp, inputs) {
         (${(d.lease.residuals[inputs.termYears] * 100).toFixed(2)}% of the financed amount) <em>plus 10% GST</em>
         to own the car.</li>
     </ul>
-    <p>All three end the same way — you own the car and we credit the same estimated resale value
-      (${money(cmp.results[0].resale)}) — so the difference is purely what each path costs you.</p>
+    <p>All three end the same way — you own the car, worth about ${money(cmp.results[0].resale)}.
+      ${inputs.sellAtEnd
+        ? 'You’ve chosen to credit a sale at the end, so that value is subtracted from every method equally.'
+        : 'Because you’re keeping it, that value isn’t subtracted from the cost — but it’s the same asset whichever way you paid, so the comparison stays fair.'}
+      The difference between the columns is purely what each path costs you.</p>
 
     <h3>Key assumptions</h3>
     <ul>
@@ -501,7 +541,7 @@ function update() {
   renderCards(cmp, inputs);
   renderBarChart(cmp, inputs);
   renderLineChart(cmp, inputs);
-  renderBreakdown(cmp);
+  renderBreakdown(cmp, inputs);
   renderNotes(cmp, inputs);
 }
 
@@ -545,6 +585,12 @@ function init() {
     .addEventListener('change', update);
   new MutationObserver(update).observe(document.documentElement, {
     attributes: true, attributeFilter: ['data-theme'],
+  });
+  // Re-render on resize so the charts switch between wide/compact layouts
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(update, 150);
   });
 
   update();

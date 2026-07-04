@@ -154,10 +154,13 @@ export function resaleValue(price, termYears, data = AU_DATA) {
 
 /**
  * Settle an outflow stream {upfront, monthly, terminal} over `termYears`,
- * future-valuing at annual `rate` (0 = nominal). Returns totals, the
- * opportunity cost (FV − nominal), and a cumulative per-year timeline.
+ * future-valuing at annual `rate` (0 = nominal). When `sell` is true the
+ * end-of-term car value is credited back (you sell); otherwise you keep the
+ * car and netCost is simply what ownership cost — the car's remaining worth
+ * is reported separately. Returns totals, the opportunity cost
+ * (FV − nominal), and a cumulative per-year timeline.
  */
-export function settle({ upfront, monthly, terminal = 0 }, termYears, rate, resale) {
+export function settle({ upfront, monthly, terminal = 0 }, termYears, rate, resale, sell) {
   const N = termYears * 12;
   const i = rate / 12;
   const grow = (months) => Math.pow(1 + i, months);
@@ -167,17 +170,18 @@ export function settle({ upfront, monthly, terminal = 0 }, termYears, rate, resa
   const nominal = upfront + monthly * N + terminal;
   const fv = upfront * grow(N) + monthly * annuity(N) + terminal;
   const opportunity = fv - nominal;
+  const credit = sell ? resale : 0;
 
   const timeline = [];
   for (let y = 1; y <= termYears; y++) {
     let c = upfront * grow(12 * y) + monthly * annuity(12 * y);
-    if (y === termYears) c += terminal - resale;
+    if (y === termYears) c += terminal - credit;
     timeline.push(c);
   }
 
   return {
     totalOutgoings: fv,
-    netCost: fv - resale,
+    netCost: fv - credit,
     opportunity,
     timeline,
   };
@@ -212,6 +216,15 @@ function runningRows(run, t, exGst) {
   ];
 }
 
+function resaleRow(resale, inputs) {
+  return inputs.sellAtEnd
+    ? { group: G.end, label: 'Less: sale of car', amount: -resale }
+    : {
+      group: G.end, label: 'Car still worth (kept, not sold)', amount: -resale, info: true,
+      note: 'You keep the car, so this isn’t subtracted from the cost — it’s the asset you own at the end',
+    };
+}
+
 function opportunityRow(opportunity, inputs) {
   if (!inputs.includeOpportunityCost) return [];
   return [{
@@ -232,14 +245,14 @@ export function buyOutright(inputs, data = AU_DATA) {
   const rate = inputs.includeOpportunityCost ? inputs.investRate : 0;
 
   const upfront = inputs.price + duty;
-  const s = settle({ upfront, monthly: run.total / 12 }, t, rate, resale);
+  const s = settle({ upfront, monthly: run.total / 12 }, t, rate, resale, inputs.sellAtEnd);
 
   const rows = [
     { group: G.buy, label: 'Vehicle price (incl. GST)', amount: inputs.price },
     { group: G.buy, label: 'Stamp duty', amount: duty },
     ...runningRows(run, t, false),
     ...opportunityRow(s.opportunity, inputs),
-    { group: G.end, label: 'Less: resale value', amount: -resale },
+    resaleRow(resale, inputs),
   ];
 
   return finishResult('Buy outright', upfront, s, resale, rows, t, {
@@ -267,7 +280,7 @@ export function carLoan(inputs, data = AU_DATA) {
 
   const s = settle(
     { upfront: deposit, monthly: payment + monthlyFee + run.total / 12, terminal: balloon },
-    t, rate, resale,
+    t, rate, resale, inputs.sellAtEnd,
   );
 
   const rows = [
@@ -281,7 +294,7 @@ export function carLoan(inputs, data = AU_DATA) {
     { group: G.fin, label: 'Loan fees', amount: appFee + monthlyFees },
     ...runningRows(run, t, false),
     ...opportunityRow(s.opportunity, inputs),
-    { group: G.end, label: 'Less: resale value', amount: -resale },
+    resaleRow(resale, inputs),
   ];
 
   return finishResult('Car loan', deposit, s, resale, rows, t, {
@@ -333,7 +346,7 @@ export function novatedLease(inputs, data = AU_DATA) {
 
   const s = settle(
     { upfront: 0, monthly: netMonthly, terminal: residualWithGst },
-    t, rate, resale,
+    t, rate, resale, inputs.sellAtEnd,
   );
 
   const rows = [
@@ -352,7 +365,7 @@ export function novatedLease(inputs, data = AU_DATA) {
     { group: G.tax, label: 'GST saved on car', amount: -gstCredit, info: true },
     { group: G.tax, label: 'GST saved on running costs', amount: -gstSavedRunning, info: true },
     { group: G.end, label: 'Residual payment (incl. GST)', amount: residualWithGst },
-    { group: G.end, label: 'Less: resale value', amount: -resale },
+    resaleRow(resale, inputs),
   ];
 
   return finishResult('Novated lease', 0, s, resale, rows, t, {

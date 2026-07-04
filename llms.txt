@@ -1,0 +1,59 @@
+# Car Calculator (carcalculator.com.au)
+
+> A free Australian calculator, presented by Crown Money, that compares the true
+> cost of owning the same car three ways — buying outright with cash, a secured
+> car loan, or a salary-packaged novated lease — using FY 2026-27 income tax,
+> FBT, GST, the EV exemption and state-by-state stamp duty. Every assumption is
+> editable and every figure is sourced.
+
+## What it answers
+
+- "Is a novated lease cheaper than a car loan or paying cash in Australia?"
+- "How much cheaper is an EV on a novated lease?" (FBT exemption for battery
+  EVs under the $91,661 LCT fuel-efficient threshold, FY 2026-27)
+- "What will this car really cost me over 1-5 years?" — including what the
+  money would have earned invested (mortgage offset, savings, or shares,
+  after tax), not just cash out the door.
+
+## Methodology (summary)
+
+- Same car, same term, same end point for all three methods; the user chooses
+  whether to credit a sale of the car at the end or keep it (in which case its
+  remaining value is shown but not subtracted).
+- Income tax: FY 2026-27 resident brackets (0/15/30/37/45%), 2% Medicare levy,
+  LITO. Tax savings computed as the exact tax difference at the user's salary.
+- Novated lease: financier claims GST on the car (capped at $6,353), running
+  costs packaged ex-GST, FBT neutralised by the Employee Contribution Method
+  (20% of base value post-tax), ATO minimum residuals (28.13% at 5 years)
+  plus 10% GST on the residual payout. Battery EVs under the threshold are
+  fully FBT-exempt and 100% pre-tax.
+- Stamp duty: current schedules for NSW, VIC, QLD, SA, WA, TAS, NT and the
+  ACT, including EV concessions in force at July 2026.
+- Opportunity cost: every outflow in every method is future-valued at the
+  user's after-tax investment return, so cash, loan and lease are treated
+  identically.
+- Market defaults (July 2026): secured car loan ~7.5% p.a. comparison rate,
+  novated lease ~9.5% p.a. effective, comprehensive insurance ~$1,400/yr,
+  petrol ~$1.80/L, per-state rego+CTP. All editable.
+
+## Key facts (FY 2026-27, sources: ato.gov.au and state revenue offices)
+
+- Income tax brackets: $0-18,200: 0% · $18,201-45,000: 15% · $45,001-135,000:
+  30% · $135,001-190,000: 37% · $190,001+: 45% (+2% Medicare levy)
+- FBT rate 47%; statutory formula 20%; FBT year ends 31 March 2027
+- EV FBT exemption threshold: $91,661 (LCT fuel-efficient, at first retail
+  sale); PHEVs not exempt since 1 April 2025
+- Car limit $69,883 → max GST credit on a car $6,353
+- ATO minimum lease residuals: 65.63% (1yr), 56.25% (2yr), 46.88% (3yr),
+  37.50% (4yr), 28.13% (5yr) — ATO ID 2002/1004
+
+## Important caveats
+
+General information only, not financial, tax or credit advice. Does not model
+HELP repayments, the Medicare levy surcharge, super, or business-use
+deductions. Novated lease quotes vary widely between providers.
+
+## About
+
+Presented by Crown Money (https://www.crown.money/). Figures reviewed July 2026;
+year-dependent constants live in one data file and are updated annually.

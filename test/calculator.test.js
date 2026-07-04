@@ -15,6 +15,7 @@ const baseInputs = {
   termYears: 5,
   salary: 100000,
   kmPerYear: 13000,
+  sellAtEnd: true,
   includeOpportunityCost: true,
   investRate: 0.033, // after-tax
   loanRate: 0.075,
@@ -106,10 +107,30 @@ test('ATO minimum residuals', () => {
 /* --------------------------------------------------------------- settle --- */
 
 test('settle: zero rate reduces to nominal sums', () => {
-  const s = settle({ upfront: 1000, monthly: 100, terminal: 500 }, 2, 0, 300);
+  const s = settle({ upfront: 1000, monthly: 100, terminal: 500 }, 2, 0, 300, true);
   assert.ok(Math.abs(s.totalOutgoings - (1000 + 2400 + 500)) < 1e-9);
   assert.ok(Math.abs(s.netCost - 3600) < 1e-9);
   assert.equal(s.opportunity, 0);
+});
+
+test('keeping the car: no resale credit, worth reported separately', () => {
+  const sold = compareAll(baseInputs);
+  const kept = compareAll({ ...baseInputs, sellAtEnd: false });
+  for (let i = 0; i < 3; i++) {
+    const s = sold.results[i], k = kept.results[i];
+    // Difference is exactly the resale value; totals and worth unchanged
+    assert.ok(Math.abs((k.netCost - s.netCost) - s.resale) < 1);
+    assert.equal(k.resale, s.resale);
+    assert.ok(Math.abs(k.totalOutgoings - s.totalOutgoings) < 1e-6);
+    // Kept: resale appears only as an info row, so non-info rows still reconcile
+    const recon = k.rows.filter((r) => !r.info).reduce((a, r) => a + r.amount, 0);
+    assert.ok(Math.abs(recon - k.netCost) < 1, `${k.label}: ${recon} vs ${k.netCost}`);
+    assert.ok(k.rows.some((r) => r.info && r.label.includes('Car still worth')));
+    // Timeline still ends at netCost
+    assert.ok(Math.abs(k.timeline[k.timeline.length - 1] - k.netCost) < 1);
+  }
+  // Ranking can differ but every method shifts by the same resale, so it doesn't
+  assert.equal(sold.cheapest.label, kept.cheapest.label);
 });
 
 test('settle: FV compounds the upfront hardest', () => {

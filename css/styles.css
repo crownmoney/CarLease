@@ -240,6 +240,14 @@ body {
   .layout { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 700px) {
+  .seg button { padding: 10px 4px; }
+  .hero { padding: 30px 0 38px; }
+  .wrap > .layout { margin-top: 20px; }
+  .panel { padding: 16px; }
+  .explainer, .faq { margin-top: 40px; }
+}
+
 .panel {
   background: var(--surface-1);
   border: 1px solid var(--border);
@@ -449,6 +457,17 @@ table.breakdown tbody td:first-child { color: var(--text-secondary); }
 table.breakdown td.credit { color: var(--good-text); }
 table.breakdown td.na { color: var(--text-muted); }
 
+/* Keep the item names readable while the value columns scroll on mobile */
+table.breakdown thead th:first-child,
+table.breakdown tbody td:first-child,
+table.breakdown tfoot td:first-child {
+  position: sticky;
+  left: 0;
+  background: var(--surface-1);
+  z-index: 1;
+}
+table.breakdown tr.group-row td { position: static; }
+
 table.breakdown tr.group-row td {
   font-size: 11.5px;
   font-weight: 700;
@@ -573,6 +592,14 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .faq summary::before, details.advanced summary::before { transition: none; }
+}
+
+/* Last so it wins the cascade against the base field rules above:
+   16px stops iOS Safari zooming the page when a field gets focus. */
+@media (max-width: 700px) {
+  .field input[type="number"],
+  .field input[type="text"],
+  .field select { font-size: 16px; }
 }
 
 .sr-only {
