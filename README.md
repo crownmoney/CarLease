@@ -67,6 +67,17 @@ longer than ~5 years), business-use deductions (this is a **private-use** compar
 insurance stamp duties, and luxury car tax on the purchase itself (enter the
 drive-away price of the car you were actually quoted).
 
+## Analytics & leads
+
+- **Google Analytics 4**: paste a measurement id into `site.gaMeasurementId` in
+  `js/data.js` and the site starts reporting pageviews, per-calculator tab usage
+  (`calculator_tab` events) and lead submissions (`generate_lead`). Empty id = no
+  analytics code loads at all.
+- **Lead form** ("Want these numbers in your inbox?"): posts name + email plus the
+  user's current scenario and results as JSON to the Zapier webhook in
+  `site.leadWebhook`. Honeypot-protected; falls back to `sendBeacon` if a CORS
+  fetch fails.
+
 ## Accuracy notes
 
 - Every constant in `js/data.js` carries a comment with its source and effective date;

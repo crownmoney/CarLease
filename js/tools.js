@@ -37,6 +37,7 @@ function activateTab(name, updateHash = true) {
   });
   TAB_IDS.forEach((t) => { $(`tab-${t}`).hidden = t !== name; });
   if (updateHash) history.replaceState(null, '', name === 'compare' ? '#calculator' : `#${name}`);
+  if (window.gtag) window.gtag('event', 'calculator_tab', { tab: name });
 }
 
 function initTabs() {
@@ -319,8 +320,106 @@ function populateStateSelect(id) {
   sel.value = 'NSW';
 }
 
+/* Google Analytics 4 — loads only when a measurement id is configured in
+   data.js (site.gaMeasurementId), so the site ships analytics-ready but
+   silent until Crown Money drops its own G-XXXX id in. */
+function initAnalytics() {
+  const id = AU_DATA.site.gaMeasurementId;
+  if (!id) return;
+  const s = document.createElement('script');
+  s.async = true;
+  s.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`;
+  document.head.appendChild(s);
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function gtag() { window.dataLayer.push(arguments); };
+  window.gtag('js', new Date());
+  window.gtag('config', id);
+}
+
+/* Lead capture → Zapier webhook, with the user's current scenario attached. */
+function initLead() {
+  const form = $('leadForm');
+  if (!form) return;
+  const status = $('leadStatus');
+  const btn = $('leadSubmit');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if ($('leadCompany').value) return; // honeypot — silently drop bots
+    const name = $('leadName').value.trim();
+    const email = $('leadEmail').value.trim();
+    if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      status.textContent = 'Please enter your name and a valid email address.';
+      status.classList.add('error');
+      return;
+    }
+    status.classList.remove('error');
+    status.textContent = 'Sending…';
+    btn.disabled = true;
+
+    const st = window.__ccState || {};
+    const i = st.inputs || {};
+    const payload = {
+      name,
+      email,
+      source: 'carcalculator.com.au',
+      page: location.href,
+      activeTab: (location.hash || '#calculator').replace('#', ''),
+      submittedAt: new Date().toISOString(),
+      scenario: st.inputs ? {
+        vehiclePrice: i.price,
+        vehicleType: i.vehicleType,
+        state: i.state,
+        termYears: i.termYears,
+        salary: i.salary,
+        kmPerYear: i.kmPerYear,
+        sellAtEnd: i.sellAtEnd,
+        countInvestmentReturns: i.includeOpportunityCost,
+        investPreset: i.investPreset,
+      } : null,
+      results: st.cmp ? st.cmp.results.map((r) => ({
+        method: r.label,
+        netCost: Math.round(r.netCost),
+        perWeek: Math.round(r.perWeek),
+        effectiveRatePct: r.impliedRate != null ? +(r.impliedRate * 100).toFixed(2) : null,
+      })) : null,
+      cheapest: st.cmp ? st.cmp.cheapest.label : null,
+    };
+
+    try {
+      const res = await fetch(AU_DATA.site.leadWebhook, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      form.reset();
+      status.textContent = 'Done — your results are on their way to your inbox.';
+      if (window.gtag) window.gtag('event', 'generate_lead', { method: 'results_email' });
+    } catch {
+      // Last-resort delivery that dodges CORS issues; response is unreadable
+      let delivered = false;
+      try {
+        delivered = navigator.sendBeacon(
+          AU_DATA.site.leadWebhook,
+          new Blob([JSON.stringify(payload)], { type: 'text/plain' }),
+        );
+      } catch { /* fall through */ }
+      if (delivered) {
+        form.reset();
+        status.textContent = 'Done — your results are on their way to your inbox.';
+        if (window.gtag) window.gtag('event', 'generate_lead', { method: 'results_email' });
+      } else {
+        status.textContent = 'That didn’t send — please check your connection and try again.';
+        status.classList.add('error');
+      }
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
 function initReveal() {
-  const sections = document.querySelectorAll('.explainer, .faq, .ad-banner');
+  const sections = document.querySelectorAll('.explainer, .faq, .ad-banner, .lead');
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
   const io = new IntersectionObserver((entries) => {
     for (const e of entries) {
@@ -335,6 +434,8 @@ function initReveal() {
 function init() {
   initTabs();
   initReveal();
+  initAnalytics();
+  initLead();
   populateStateSelect('nv-state');
   populateStateSelect('sd-state');
   const yearsSel = $('dp-years');

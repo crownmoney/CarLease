@@ -567,6 +567,8 @@ function update() {
   const inputs = readInputs();
   syncInvestUI(inputs);
   const cmp = compareAll(inputs);
+  // Snapshot for the lead form (tools.js) — sent with "email me my results"
+  window.__ccState = { inputs, cmp };
   renderVerdict(cmp, inputs);
   renderCards(cmp, inputs);
   renderBarChart(cmp, inputs);

@@ -10,6 +10,13 @@ const per = (v, size) => Math.ceil(Math.max(0, v) / size);
 export const AU_DATA = {
   fyLabel: 'FY 2026–27',
 
+  /* Site plumbing — not tax data. gaMeasurementId: paste a GA4 id ("G-XXXX")
+     to turn on analytics (pageviews, tab usage, lead submissions). */
+  site: {
+    gaMeasurementId: '',
+    leadWebhook: 'https://hooks.zapier.com/hooks/catch/24598887/4u2kx5v/',
+  },
+
   /* Resident individual income tax, FY 2026-27.
      Rates legislated by the Treasury Laws Amendment (More Cost of Living
      Relief) Act 2025 — second bracket cut 16% → 15% from 1 July 2026.
