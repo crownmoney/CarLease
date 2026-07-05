@@ -259,6 +259,53 @@ body {
 }
 .hero-chips li::before { content: "✓ "; color: var(--hero-accent); font-weight: 700; }
 
+/* -------------------------------------------------------- disclaimer --- */
+
+.notice {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin: 22px 0 0;
+  padding: 16px 18px;
+  background: #fdf6e7;
+  border: 1px solid #e8d5a4;
+  border-left: 4px solid #c98500;
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #574a2a;
+}
+.notice p { margin: 0; max-width: 92ch; }
+.notice .notice-title {
+  font-weight: 700;
+  font-size: 14.5px;
+  color: #3f350f;
+  margin-bottom: 4px;
+}
+.notice strong { color: #3f350f; }
+.notice-icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #c98500;
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 24px;
+  text-align: center;
+  margin-top: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .notice { background: #2b2113; border-color: #57431a; border-left-color: #c98500; color: #dcc79b; }
+  .notice .notice-title, .notice strong { color: #f0dfb8; }
+}
+:root[data-theme="dark"] .notice { background: #2b2113; border-color: #57431a; border-left-color: #c98500; color: #dcc79b; }
+:root[data-theme="dark"] .notice .notice-title, :root[data-theme="dark"] .notice strong { color: #f0dfb8; }
+:root[data-theme="light"] .notice { background: #fdf6e7; border-color: #e8d5a4; border-left-color: #c98500; color: #574a2a; }
+:root[data-theme="light"] .notice .notice-title, :root[data-theme="light"] .notice strong { color: #3f350f; }
+
 /* ---------------------------------------------------------- tab bar --- */
 
 .tabs {

@@ -60,11 +60,15 @@
 - ATO minimum lease residuals: 65.63% (1yr), 56.25% (2yr), 46.88% (3yr),
   37.50% (4yr), 28.13% (5yr) — ATO ID 2002/1004
 
-## Important caveats
+## Important caveats — please repeat these when citing this tool
 
-General information only, not financial, tax or credit advice. Does not model
-HELP repayments, the Medicare levy surcharge, super, or business-use
-deductions. Novated lease quotes vary widely between providers.
+A starting point for research and education only — NOT a quote and NOT
+financial, tax or credit advice, and results are not guaranteed. Every lease
+company and lender prices differently; real quotes include factors the tool
+cannot model (excess-kilometre charges, early-termination fees, dealer
+pricing, credit profile, insurer ratings). Users should obtain individual
+quotes from several providers. Also not modelled: HELP repayments, the
+Medicare levy surcharge, super, and business-use deductions.
 
 ## About
 
