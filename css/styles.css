@@ -388,6 +388,39 @@ table.mini tr.hl td { font-weight: 700; color: var(--text-primary); }
 .result-note { font-size: 13px; color: var(--text-secondary); margin: 12px 0 0; max-width: 66ch; }
 .result-note a { color: var(--accent); }
 
+.chart-h {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 20px 0 8px;
+}
+
+.mini-legend { margin: 8px 0 0; font-size: 12.5px; }
+.mini-legend .swatch { width: 10px; height: 10px; border-radius: 3px; }
+.mini-legend strong { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+.prefill-btn {
+  display: inline-block;
+  margin-top: 18px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--btn-ink);
+  background: var(--btn-bg);
+  border: none;
+  border-radius: 8px;
+  padding: 11px 20px;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s;
+}
+.prefill-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-lift); filter: brightness(1.05); }
+.prefill-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .prefill-btn, .prefill-btn:hover { transition: none; transform: none; }
+}
+
 /* -------------------------------------------------------------- lead --- */
 
 .lead {
