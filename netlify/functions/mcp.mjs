@@ -91,9 +91,26 @@ function handleRpc(msg) {
 export default async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   if (req.method === 'GET') {
-    // Stateless server: no server-initiated stream to offer
-    return new Response('This MCP endpoint is stateless: connect with Streamable HTTP (POST).', {
-      status: 405, headers: { Allow: 'POST, OPTIONS, DELETE', ...CORS },
+    // Real MCP clients only GET to open an SSE stream (Accept: text/event-stream);
+    // this stateless server has none to offer, so 405 per spec. Anything else
+    // GETting this URL is a human or an AI reading it like a webpage — give
+    // them something useful instead of a bare error.
+    if ((req.headers.get('accept') || '').includes('text/event-stream')) {
+      return new Response(null, { status: 405, headers: { Allow: 'POST, OPTIONS, DELETE', ...CORS } });
+    }
+    return json({
+      what: 'This is a Model Context Protocol (MCP) server, not a webpage.',
+      service: META.service,
+      provider: 'Crown Money (crownmoney.com.au) — presented via carcalculator.com.au',
+      tools: MCP_TOOLS.map((t) => t.name),
+      howToConnect: {
+        claude: 'claude.ai → Settings → Connectors → Add custom connector → paste https://carcalculator.com.au/mcp (no authentication)',
+        claudeCode: 'claude mcp add --transport http carcalculator https://carcalculator.com.au/mcp',
+        cursorAndOthers: 'Add as a remote MCP server (Streamable HTTP) with URL https://carcalculator.com.au/mcp',
+      },
+      restAlternative: 'https://carcalculator.com.au/api (OpenAPI spec at /api/openapi.json)',
+      figures: META.figures,
+      disclaimer: META.disclaimer,
     });
   }
   if (req.method === 'DELETE') return new Response(null, { status: 200, headers: CORS });

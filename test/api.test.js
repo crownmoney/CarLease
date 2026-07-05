@@ -116,6 +116,13 @@ test('MCP error paths: bad tool args, unknown method, parse error, GET', async (
   const parse = await mcpHandler(new Request(`${BASE}/mcp`, { method: 'POST', body: 'not json' }));
   assert.equal((await parse.json()).error.code, -32700);
 
-  const getRes = await mcpHandler(new Request(`${BASE}/mcp`, { method: 'GET' }));
-  assert.equal(getRes.status, 405);
+  // MCP clients (Accept: text/event-stream) get the spec-required 405...
+  const sse = await mcpHandler(new Request(`${BASE}/mcp`, { method: 'GET', headers: { Accept: 'text/event-stream' } }));
+  assert.equal(sse.status, 405);
+  // ...but a plain GET (human/AI reading it) gets connection instructions
+  const plain = await mcpHandler(new Request(`${BASE}/mcp`, { method: 'GET' }));
+  assert.equal(plain.status, 200);
+  const info = await plain.json();
+  assert.ok(info.howToConnect.claude.includes('Connectors'));
+  assert.equal(info.tools.length, 8);
 });
