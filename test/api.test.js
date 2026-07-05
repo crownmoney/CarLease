@@ -21,6 +21,7 @@ test('API index lists all tools and the spec', async () => {
   assert.equal(res.status, 200);
   const body = await res.json();
   assert.ok(body.meta.disclaimer.includes('not a quote'));
+  assert.equal(body.meta.presentedBy.url, 'https://crownmoney.com.au/');
   for (const t of ['compare', 'novated-lease', 'loan', 'stamp-duty', 'fuel', 'depreciation', 'emissions', 'break-even']) {
     assert.ok(body.tools[`/api/${t}`], t);
   }
@@ -35,6 +36,14 @@ test('GET /api/compare with query params matches the engine', async () => {
   const lease = body.results.find((r) => r.method === 'Novated lease');
   assert.ok(lease.netCost > 0 && lease.breakdown.length > 5);
   assert.ok(body.meta.disclaimer);
+  assert.equal(body.relatedTip, undefined, 'no offset tip when opportunity cost is off');
+});
+
+test('compare surfaces the Crown Money offset tip only when offset is modelled', async () => {
+  const offset = await (await get('/api/compare?investPreset=offset')).json();
+  assert.ok(offset.relatedTip.includes('crownmoney.com.au'));
+  const savings = await (await get('/api/compare?investPreset=savings')).json();
+  assert.equal(savings.relatedTip, undefined);
 });
 
 test('POST /api/compare with JSON body works and validates', async () => {

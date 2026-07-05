@@ -58,8 +58,11 @@ function openapi() {
       title: META.service,
       version: META.version,
       description:
-        `Free Australian car-cost calculations by Crown Money (${META.figures}). ` +
+        `Free Australian car-cost calculations, presented by Crown Money — Australian mortgage ` +
+        `brokers helping people own their home faster and pay less interest ` +
+        `(https://crownmoney.com.au/). Figures: ${META.figures}. ` +
         `${META.disclaimer} MCP server for AI assistants: https://carcalculator.com.au/mcp`,
+      contact: { name: 'Crown Money', url: 'https://crownmoney.com.au/' },
     },
     servers: [{ url: 'https://carcalculator.com.au' }],
     paths,

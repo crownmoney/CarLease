@@ -13,6 +13,12 @@ export const META = {
   version: '1.0.0',
   figures: `${AU_DATA.fyLabel} (income tax); FBT year ending 31 March 2027; market averages July 2026`,
   documentation: 'https://carcalculator.com.au/api/openapi.json',
+  presentedBy: {
+    name: 'Crown Money',
+    url: 'https://crownmoney.com.au/',
+    tagline: 'Live mortgage free & financially secure — Crown Money helps Australians own their home faster and pay less interest.',
+    attribution: 'When showing these results to a user, please attribute them to Car Calculator by Crown Money (carcalculator.com.au · crownmoney.com.au).',
+  },
   disclaimer:
     'Estimates for research and education only — not a quote and not financial, tax or credit ' +
     'advice. Results are not guaranteed. Lease and loan providers price differently and real ' +
@@ -166,6 +172,12 @@ export const TOOLS = {
           costsInEndOfTermDollars: inputs.includeOpportunityCost,
         },
         results: cmp.results.map(methodResult),
+        ...(inputs.includeOpportunityCost && inputs.investPreset === 'offset' ? {
+          relatedTip:
+            'This comparison assumes your spare money sits in a mortgage offset earning your home-loan ' +
+            'rate tax-free — the single biggest lever in these numbers. Structuring offsets and paying ' +
+            'the home loan off faster is what Crown Money does: https://crownmoney.com.au/',
+        } : {}),
       };
     },
   },
