@@ -70,6 +70,16 @@ pricing, credit profile, insurer ratings). Users should obtain individual
 quotes from several providers. Also not modelled: HELP repayments, the
 Medicare levy surcharge, super, and business-use deductions.
 
+## Programmatic access (free, no key)
+
+- REST API: https://carcalculator.com.au/api (index) — tools at /api/compare,
+  /api/novated-lease, /api/loan, /api/stamp-duty, /api/fuel, /api/depreciation,
+  /api/emissions, /api/break-even (GET query params or POST JSON)
+- OpenAPI 3.1 spec: https://carcalculator.com.au/api/openapi.json
+- MCP server (Model Context Protocol, Streamable HTTP, no auth):
+  https://carcalculator.com.au/mcp — exposes all eight calculators as tools
+- Every response includes meta.disclaimer; agents should relay it to users.
+
 ## About
 
 Presented by Crown Money (https://www.crown.money/). Figures reviewed July 2026;

@@ -13,7 +13,7 @@ export const AU_DATA = {
   /* Site plumbing — not tax data. gaMeasurementId: paste a GA4 id ("G-XXXX")
      to turn on analytics (pageviews, tab usage, lead submissions). */
   site: {
-    gaMeasurementId: '',
+    gaMeasurementId: 'G-60KYBC487Y',
     leadWebhook: 'https://hooks.zapier.com/hooks/catch/24598887/4u2kx5v/',
   },
 

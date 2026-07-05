@@ -695,6 +695,30 @@
     </details>
   </section>
 
+  <!-- ====================================================== developers -->
+  <section class="faq" aria-labelledby="devH">
+    <h2 id="devH" class="section-h">For developers &amp; AI builders</h2>
+    <details>
+      <summary>Free REST API — use these calculators in your own app</summary>
+      <p>Every calculator is available as a JSON API on this domain — no key required.
+        <code>GET https://carcalculator.com.au/api/compare?price=62000&amp;vehicleType=ev&amp;state=NSW&amp;salary=100000</code>
+        returns the full three-way comparison; likewise <code>/api/loan</code>, <code>/api/stamp-duty</code>,
+        <code>/api/novated-lease</code>, <code>/api/fuel</code>, <code>/api/depreciation</code>,
+        <code>/api/emissions</code> and <code>/api/break-even</code> (GET query params or POST JSON).
+        The machine-readable spec at <a href="/api/openapi.json">/api/openapi.json</a> plugs straight into
+        Zapier, Make, Power Automate and GPT Actions. Start at <a href="/api">/api</a> for the index.
+        Every response carries the figures vintage and the disclaimer — please surface both to your users.</p>
+    </details>
+    <details>
+      <summary>MCP server — plug the calculators into Claude, ChatGPT or Cursor</summary>
+      <p>AI assistants that speak the Model Context Protocol can use all eight calculators as tools:
+        add <code>https://carcalculator.com.au/mcp</code> as a remote MCP server (no authentication) and
+        ask things like <em>"is a novated lease cheaper than a loan for a $70k EV on a $120k salary in
+        VIC?"</em> — the assistant will call the same engine this site uses, with current FY 2026-27
+        figures.</p>
+    </details>
+  </section>
+
   <footer class="site">
     <div class="footer-brand">
       <a href="https://crownmoney.com.au" rel="noopener" aria-label="Crown Money">

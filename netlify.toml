@@ -1,7 +1,11 @@
 # Static site — no build step. Deploys the repo root as-is.
+# Serverless: /api/* (REST + OpenAPI) and /mcp (Model Context Protocol).
 [build]
   publish = "."
   command = ""
+
+[functions]
+  directory = "netlify/functions"
 
 [[headers]]
   for = "/*"

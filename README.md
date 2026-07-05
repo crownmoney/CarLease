@@ -67,6 +67,21 @@ longer than ~5 years), business-use deductions (this is a **private-use** compar
 insurance stamp duties, and luxury car tax on the purchase itself (enter the
 drive-away price of the car you were actually quoted).
 
+## API & MCP (developers)
+
+Serverless endpoints (Netlify Functions) share the same engine and data as the UI:
+
+- **REST**: `GET|POST /api/{tool}` — `compare`, `novated-lease`, `loan`,
+  `stamp-duty`, `fuel`, `depreciation`, `emissions`, `break-even`. Index at
+  `/api`, OpenAPI 3.1 spec at `/api/openapi.json` (works with Zapier, Make,
+  Power Automate, GPT Actions). CORS `*`, no auth. Every response carries
+  `meta.disclaimer` and the figures vintage.
+- **MCP**: stateless Streamable-HTTP server at `/mcp` — add it as a remote MCP
+  server in Claude/ChatGPT/Cursor and all eight calculators become tools.
+- Code: `netlify/functions/` (`lib/service.mjs` wraps the engine with
+  validation; `api.mjs` and `mcp.mjs` are thin transports). Handler-level
+  tests in `test/api.test.js` run in plain Node.
+
 ## Analytics & leads
 
 - **Google Analytics 4**: paste a measurement id into `site.gaMeasurementId` in
